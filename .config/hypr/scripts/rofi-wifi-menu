@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Dependencies: nmcli, rofi
+
+# Function to get list of available Wi-Fi networks
+get_networks() {
+  nmcli -f SSID dev wifi list | awk 'NR>1 {if ($1 == "--") print "[Hidden Network]"; else print $0}'
+}
+
+# Get current connection
+current_connection=$(nmcli -t -f NAME c show --active)
+
+# Show list in rofi
+chosen_network=$(get_networks | rofi -dmenu)
+
+# If nothing selected, exit
+[[ -z "$chosen_network" ]] && exit 0
+
+# Get just the SSID (first field)
+ssid=$(echo "$chosen_network" | awk '{print $1}')
+
+# Check if we're already connected
+if [[ "$ssid" == "$current_connection" ]]; then
+  nmcli connection down "$ssid"
+  notify-send "Disconnected from $ssid"
+  exit 0
+fi
+
+# Try connecting directly (for known/saved networks)
+if nmcli connection up "$ssid" &>/dev/null; then
+  notify-send "Connected to $ssid"
+  exit 0
+fi
+
+# If direct connection fails, prompt for password and retry
+while true; do
+  password=$(rofi -dmenu -p "Password for $ssid" -lines 0 -password)
+  [[ -z "$password" ]] && notify-send "Wi-Fi" "Cancelled connection to $ssid" && exit 1
+
+  if nmcli dev wifi connect "$ssid" password "$password" &>/dev/null; then
+    notify-send "Connected to $ssid"
+    break
+  else
+    notify-send "Wi-Fi" "Connection failed. Try again."
+  fi
+done
