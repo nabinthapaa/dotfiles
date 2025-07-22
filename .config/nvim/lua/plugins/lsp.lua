@@ -1,6 +1,7 @@
 return {
 	{
 		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
 			"williamboman/mason.nvim",
 			"williamboman/mason-lspconfig.nvim",
@@ -53,7 +54,6 @@ return {
 				lspconfig[server].setup({
 					capabilities = capabilities,
 					on_attach = on_attach,
-					lazy = true
 				})
 			end
 		end
