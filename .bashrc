@@ -102,6 +102,9 @@ list_sizes() {
   du -h --max-depth="$1" . | sort -h
 }
 
+# export VIM=nvim
+export VIM=nvim
+
 export SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
 export LANG=en_US.UTF-8
 export OLLAMA_MODELS="/run/media/nabin/4D8B-DF04/ollama_models/.ollama"
@@ -123,25 +126,78 @@ source <(fzf --bash)
 # users are encouraged to define aliases within the OSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 
-export ANDROID_HOME=$HOME/.android/
-export CHROME_EXECUTABLE=/usr/bin/chromium
+# export ANDROID_HOME=$HOME/.android/
+# export CHROME_EXECUTABLE=/usr/bin/chromium
+# export VIMRUNTIME=/usr/share/nvim/runtime
+
+export VIMRUNTIME=$HOME/.local/nvim/share/nvim/runtime
+export NVIM_DIR=$HOME/.local/nvim/
+export PATH="$NVIM_DIR/bin:$PATH"
+
 
 export PATH="$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/go/bin:$HOME/.local/bin:$HOME/.android/cmdline-tools/bin:$HOME/.android/platform-tools:$PATH"
-eval -- "$(/usr/bin/starship init bash --print-full-init)"
+eval -- "$(/home/nabin/.cargo/bin/starship init bash --print-full-init)"
 eval "$(zoxide init bash)"
-
+#
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-
-# pnpm
-export PNPM_HOME="/home/nabin/.local/share/pnpm"
-case ":$PATH:" in
-*":$PNPM_HOME:"*) ;;
-*) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+#
+# # pnpm
+# export PNPM_HOME="/home/nabin/.local/share/pnpm"
+# case ":$PATH:" in
+# *":$PNPM_HOME:"*) ;;
+# *) export PATH="$PNPM_HOME:$PATH" ;;
+# esac
+# # pnpm end
+#
+# # bun
+# export BUN_INSTALL="$HOME/.bun"
+# export PATH="$BUN_INSTALL/bin:$PATH"
+#
+# # laravel
+# export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+#
+# # Generated for envman. Do not edit.
+# [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+#
+# __docker_env_auto() {
+#   local docker_file=".docker-service"
+#   local current_dir="$PWD"
+#
+#   if [[ -f "$current_dir/$docker_file" ]]; then
+#     local service_name
+#     service_name=$(head -n 1 "$current_dir/$docker_file")
+#
+#     if [[ "$APP_SERVICE" != "$service_name" ]]; then
+#       export APP_SERVICE="$service_name"
+#       export NVIM_LARAVEL_ENV="docker-compose"
+#     fi
+#   else
+#     if [[ -n "$APP_SERVICE" ]]; then
+#       unset APP_SERVICE
+#       unset NVIM_LARAVEL_ENV
+#     fi
+#   fi
+# }
+#
+#
+# # Ctrl+f
+# bind -x '"\C-f": "tmux-sessionizer"'
+#
+# # Alt+h
+# bind -x '"\eh": "tmux-sessionizer -s 0"'
+#
+# # Alt+t
+# bind -x '"\et": "tmux-sessionizer -s 1"'
+#
+# # Alt+n
+# bind -x '"\en": "tmux-sessionizer -s 2"'
+#
+# # Alt+s
+# bind -x '"\es": "tmux-sessionizer -s 3"'
+#
+# SCRIPTS="$HOME/.local/scripts/"
+# export PATH="$SCRIPTS:$PATH"
+#
+# PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
