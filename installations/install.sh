@@ -30,7 +30,7 @@ echo "[*] Installing Neovim and related tools..."
 paru -S --needed neovim lua51 luarocks tmux
 
 echo "[*] Installing general tools..."
-paru -S --needed ripgrep pavucontrol jq tldr go fzf btop
+paru -S --needed ripgrep pavucontrol jq tldr go fzf btop easyeffects
 
 echo "[*] Installing fonts..."
 paru -S --needed ttf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols
