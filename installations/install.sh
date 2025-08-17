@@ -48,7 +48,7 @@ echo "[*] Installing sound service"
 paru -S --needed pipewire pipewire-pulse wireplumber pavucontrol
 
 echo "[*] Installing Hyprland tools..."
-paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal
+paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal swayidle
 
 echo "[*] Installing xdg-desktop-portal support..."
 paru -S --needed xdg-desktop-portal-gtk xdg-desktop-portal-hyprland
