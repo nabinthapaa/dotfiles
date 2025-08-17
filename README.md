@@ -25,7 +25,7 @@ My custom arch linux installation and setup using simple bash script
         - graphics -> nvidia
     - If swap add turn of `swap on zram`
 
-## Large size /boot or custom boot size added
+## Large size `/boot` or custom boot size added
  - After setting up `/boot` to have large size say 2GiB 
  - Run `lsblk` to see partition
  - chroot into arch using 

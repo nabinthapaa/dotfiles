@@ -103,9 +103,39 @@ paru -S --needed zen-browser-bin
 echo "[*] Generating color scheme"
 wal -i "$HOME/dotfiles/image/kath.jpg"
 
+echo "[*] Installing tmux sessionizer" 
+if [ -d "$HOME/.local/scripts/" ]; then 
+		mkdir -p "$HOME/.local/scripts"
+fi
+curl https://raw.githubusercontent.com/ThePrimeagen/tmux-sessionizer/refs/heads/master/tmux-sessionizer -o $HOME/.local/scripts/tmux-sessionizer
+chmod +x $HOME/.local/scripts/tmux-sessionizer
+
 echo "[*] Starting sound service" 
 systemctl --user enable --now pipewire
 systemctl --user enable --now pipewire-pulse
 systemctl --user enable --now wireplumber
+
+# kanata setup 
+echo "[*] Setting up kanata"
+if ! getent group uinput > /dev/null; then
+    sudo groupadd uinput
+    echo "[*] Created 'uinput' group."
+fi
+sudo usermod -aG uinput "$USER"
+
+if ! getent group input > /dev/null; then
+    sudo groupadd input
+    echo "[*] Created 'uinput' group."
+fi
+sudo usermod -aG input "$USER"
+
+sudo modprobe uinput
+echo "uinput" | sudo tee /etc/modules-load.d/uinput.conf >> /dev/null 
+echo 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' | sudo tee /etc/udev/rules.d/99-uinput.rules >> /dev/null
+echo 'KERNEL=="event*", SUBSYSTEM=="input", GROUP="input", MODE="660"' | sudo tee /etc/udev/rules.d/99-input.rules >> /dev/null
+
+echo "[*] Reloading udm rules"
+sudo udevadm control --reload-rules
+sudo udevadm trigger
 
 echo "✅ All done! You may need to restart or log out and back in for Docker group changes to take effect."

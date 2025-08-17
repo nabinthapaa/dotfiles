@@ -21,7 +21,7 @@ alias status="sudo systemctl status"
 alias stop="sudo systemctl stop"
 
 # Start kanata to overide keyboard
-# sudo -u nabin /usr/bin/kanata -c /home/nabin/.config/kanata/config.kbd >/dev/null &
+# sudo -u $USER /usr/bin/kanata -c /home/nabin/.config/kanata/config.kbd >/dev/null &
 
 tmp() {
   # Create a temporary directory and store its path in tmpd
@@ -142,19 +142,18 @@ eval "$(zoxide init bash)"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-#
-# # pnpm
-# export PNPM_HOME="/home/nabin/.local/share/pnpm"
-# case ":$PATH:" in
-# *":$PNPM_HOME:"*) ;;
-# *) export PATH="$PNPM_HOME:$PATH" ;;
-# esac
-# # pnpm end
-#
-# # bun
-# export BUN_INSTALL="$HOME/.bun"
-# export PATH="$BUN_INSTALL/bin:$PATH"
-#
+
+# pnpm
+export PNPM_HOME="/home/nabin/.local/share/pnpm"
+case ":$PATH:" in
+*":$PNPM_HOME:"*) ;;
+*) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
 # # laravel
 # export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 #
@@ -180,24 +179,24 @@ export NVM_DIR="$HOME/.nvm"
 #     fi
 #   fi
 # }
-#
-#
-# # Ctrl+f
-# bind -x '"\C-f": "tmux-sessionizer"'
-#
-# # Alt+h
-# bind -x '"\eh": "tmux-sessionizer -s 0"'
-#
-# # Alt+t
-# bind -x '"\et": "tmux-sessionizer -s 1"'
-#
-# # Alt+n
-# bind -x '"\en": "tmux-sessionizer -s 2"'
-#
-# # Alt+s
-# bind -x '"\es": "tmux-sessionizer -s 3"'
-#
-# SCRIPTS="$HOME/.local/scripts/"
-# export PATH="$SCRIPTS:$PATH"
-#
+
+
+# Ctrl+f
+bind -x '"\C-f": "tmux-sessionizer"'
+
+# Alt+h
+bind -x '"\eh": "tmux-sessionizer -s 0"'
+
+# Alt+t
+bind -x '"\et": "tmux-sessionizer -s 1"'
+
+# Alt+n
+bind -x '"\en": "tmux-sessionizer -s 2"'
+
+# Alt+s
+bind -x '"\es": "tmux-sessionizer -s 3"'
+
+SCRIPTS="$HOME/.local/scripts/"
+export PATH="$SCRIPTS:$PATH"
+
 # PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
