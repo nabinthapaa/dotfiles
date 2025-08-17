@@ -136,7 +136,7 @@ export PATH="$NVIM_DIR/bin:$PATH"
 
 
 export PATH="$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/go/bin:$HOME/.local/bin:$HOME/.android/cmdline-tools/bin:$HOME/.android/platform-tools:$PATH"
-eval -- "$(/home/nabin/.cargo/bin/starship init bash --print-full-init)"
+eval -- "$(/usr/bin/starship init bash --print-full-init)"
 eval "$(zoxide init bash)"
 #
 export NVM_DIR="$HOME/.nvm"

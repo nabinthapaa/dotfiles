@@ -27,10 +27,10 @@ fi
 cd "$HOME"
 
 echo "[*] Installing Neovim and related tools..."
-paru -S --needed neovim lua51 luarocks tmux
+paru -S --needed neovim lua51 luarocks tmux dunst kanata-bin starship
 
 echo "[*] Installing general tools..."
-paru -S --needed ripgrep pavucontrol jq tldr go fzf btop easyeffects
+paru -S --needed ripgrep jq tldr go fzf btop easyeffects lazygit
 
 echo "[*] Installing fonts..."
 paru -S --needed ttf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols
@@ -40,6 +40,12 @@ paru -S --needed adobe-source-han-sans-jp-fonts adobe-source-han-serif-jp-fonts
 
 echo "[*] Installing Ghostty terminal..."
 paru -S --needed ghostty
+
+echo "[*] Installing Discord..."
+paru -S --needed discord
+
+echo "[*] Installing sound service" 
+paru -S --needed pipewire pipewire-pulse wireplumber pavucontrol
 
 echo "[*] Installing Hyprland tools..."
 paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal
@@ -62,18 +68,12 @@ sudo usermod -aG docker "$USER"
 echo "[*] Installing Rust (non-interactive)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Add cargo bin to PATH for this session
-export PATH="$HOME/.cargo/bin:$PATH"
-
-echo "[*] Installing Rust tools..."
-cargo install stylua --features luajit
-cargo install starship
-cargo install kanata
-
-
 
 echo "[*] Updating bash config and symlinking configs"
 mkdir -p "$HOME/.config"
+if [ -f "$HOME/.bashrc" ]; then
+  mv "$HOME/.bashrc" "$HOME/.bashrc.bak"
+fi
 ln -sf "$HOME/dotfiles/.bashrc" "$HOME/.bashrc"
 ln -sf "$HOME/dotfiles/.config/nvim" "$HOME/.config/nvim"
 ln -sf "$HOME/dotfiles/.config/ghostty" "$HOME/.config/ghostty"
@@ -102,5 +102,10 @@ paru -S --needed zen-browser-bin
 
 echo "[*] Generating color scheme"
 wal -i "$HOME/dotfiles/image/kath.jpg"
+
+echo "[*] Starting sound service" 
+systemctl --user enable --now pipewire
+systemctl --user enable --now pipewire-pulse
+systemctl --user enable --now wireplumber
 
 echo "✅ All done! You may need to restart or log out and back in for Docker group changes to take effect."
