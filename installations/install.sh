@@ -1,0 +1,104 @@
+#!/bin/bash
+
+set -e
+
+echo "[*] Installing base-devel and git (required for building AUR packages)..."
+sudo pacman -S --needed base-devel git curl
+
+echo "[*] Cloning dotfiles"
+if [ -d  "$HOME/dotfiles/" ]; then 
+		echo "[*] Removing old config"
+		rm -rf "$HOME/dotfiles"
+fi
+git clone https://github.com/nabinthapaa/dotfiles "$HOME/dotfiles"
+cd "$HOME/dotfiles"
+
+if ! command -v paru &> /dev/null; then
+  echo "[*] Cloning and installing paru..."
+  cd "$HOME"
+  git clone https://aur.archlinux.org/paru.git
+  cd paru
+  makepkg -si
+  cd "$HOME"
+else
+  echo "[*] paru already installed, skipping."
+fi
+
+cd "$HOME"
+
+echo "[*] Installing Neovim and related tools..."
+paru -S --needed neovim lua51 luarocks tmux
+
+echo "[*] Installing general tools..."
+paru -S --needed ripgrep pavucontrol jq tldr go fzf btop
+
+echo "[*] Installing fonts..."
+paru -S --needed ttf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols
+
+echo "[*] Installing Duolingo web fonts (for Japanese)..."
+paru -S --needed adobe-source-han-sans-jp-fonts adobe-source-han-serif-jp-fonts
+
+echo "[*] Installing Ghostty terminal..."
+paru -S --needed ghostty
+
+echo "[*] Installing Hyprland tools..."
+paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard
+
+echo "[*] Installing xdg-desktop-portal support..."
+paru -S --needed xdg-desktop-portal-gtk xdg-desktop-portal-hyprland
+
+echo "[*] Installing misc media tools..."
+paru -S --noconfirm ffmpeg aalib ascii-image-converter-bin
+
+echo "[*] Installing Docker and adding user to docker group..."
+paru -S --needed docker docker-compose docker-buildx
+
+# Avoid errors if group already exists
+if ! getent group docker > /dev/null; then
+    sudo groupadd docker
+fi
+sudo usermod -aG docker "$USER"
+
+echo "[*] Installing Rust (non-interactive)..."
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Add cargo bin to PATH for this session
+export PATH="$HOME/.cargo/bin:$PATH"
+
+echo "[*] Installing Rust tools..."
+cargo install stylua --features luajit
+cargo install starship
+cargo install kanata
+
+
+
+echo "[*] Updating bash config and symlinking configs"
+mkdir -p "$HOME/.config"
+ln -sf "$HOME/dotfiles/.bashrc" "$HOME/.bashrc"
+ln -sf "$HOME/dotfiles/.config/nvim" "$HOME/.config/nvim"
+ln -sf "$HOME/dotfiles/.config/ghostty" "$HOME/.config/ghostty"
+ln -sf "$HOME/dotfiles/.config/easyeffects" "$HOME/.config/easyeffects"
+ln -sf "$HOME/dotfiles/.config/hypr" "$HOME/.config/hypr"
+ln -sf "$HOME/dotfiles/.config/kanata" "$HOME/.config/kanata"
+ln -sf "$HOME/dotfiles/.config/tmux" "$HOME/.config/tmux"
+ln -sf "$HOME/dotfiles/.config/waybar" "$HOME/.config/waybar"
+ln -sf "$HOME/dotfiles/.config/tmux-sessionizer" "$HOME/.config/tmux-sessionizer"
+ln -sf "$HOME/dotfiles/.config/xdg-desktop-portal" "$HOME/.config/xdg-desktop-portal"
+ln -sf "$HOME/dotfiles/.config/dunst" "$HOME/.config/dunst"
+ln -sf "$HOME/dotfiles/.config/rofi" "$HOME/.config/rofi"
+ln -sf "$HOME/dotfiles/.config/wal" "$HOME/.config/wal"
+
+# install nvm for node
+echo "[*] Installing nvm"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+nvm install --lts
+
+# install browser
+echo "[*] Installing zen browser"
+paru -S --needed zen-browser-bin
+
+echo "✅ All done! You may need to restart or log out and back in for Docker group changes to take effect."
