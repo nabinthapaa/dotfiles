@@ -42,7 +42,7 @@ echo "[*] Installing Ghostty terminal..."
 paru -S --needed ghostty
 
 echo "[*] Installing Hyprland tools..."
-paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard
+paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal
 
 echo "[*] Installing xdg-desktop-portal support..."
 paru -S --needed xdg-desktop-portal-gtk xdg-desktop-portal-hyprland
@@ -97,8 +97,10 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 nvm install --lts
 
-# install browser
 echo "[*] Installing zen browser"
 paru -S --needed zen-browser-bin
+
+echo "[*] Generating color scheme"
+wal -i "$HOME/dotfiles/image/kath.jpg"
 
 echo "✅ All done! You may need to restart or log out and back in for Docker group changes to take effect."
