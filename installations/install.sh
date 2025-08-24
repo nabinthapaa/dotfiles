@@ -41,6 +41,9 @@ paru -S --needed adobe-source-han-sans-jp-fonts adobe-source-han-serif-jp-fonts
 echo "[*] Installing Ghostty terminal..."
 paru -S --needed ghostty
 
+echo "[*] Installing Universal Wayland Session Manager(UWSM)..."
+paru -S --needed uwsm libnewt
+
 echo "[*] Installing Discord..."
 paru -S --needed discord
 
@@ -48,7 +51,7 @@ echo "[*] Installing sound service"
 paru -S --needed pipewire pipewire-pulse wireplumber pavucontrol
 
 echo "[*] Installing Hyprland tools..."
-paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal swayidle
+paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal hypridle
 
 echo "[*] Installing xdg-desktop-portal support..."
 paru -S --needed xdg-desktop-portal-gtk xdg-desktop-portal-hyprland
@@ -75,6 +78,7 @@ if [ -f "$HOME/.bashrc" ]; then
   mv "$HOME/.bashrc" "$HOME/.bashrc.bak"
 fi
 ln -sf "$HOME/dotfiles/.bashrc" "$HOME/.bashrc"
+ln -sf "$HOME/dotfiles/.profile" "$HOME/.profile"
 ln -sf "$HOME/dotfiles/.config/nvim" "$HOME/.config/nvim"
 ln -sf "$HOME/dotfiles/.config/ghostty" "$HOME/.config/ghostty"
 ln -sf "$HOME/dotfiles/.config/easyeffects" "$HOME/.config/easyeffects"
@@ -137,5 +141,7 @@ echo 'KERNEL=="event*", SUBSYSTEM=="input", GROUP="input", MODE="660"' | sudo te
 echo "[*] Reloading udm rules"
 sudo udevadm control --reload-rules
 sudo udevadm trigger
+
+systemctl --user enable --now hypridle.service
 
 echo "✅ All done! You may need to restart or log out and back in for Docker group changes to take effect."
