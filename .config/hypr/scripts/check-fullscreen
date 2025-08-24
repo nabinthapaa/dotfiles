@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Check if the currently active window is fullscreen
+fullscreen=$(hyprctl activewindow -j | jq -r '.fullscreen')
+media_status=$(playerctl status 2>/dev/null)
+
+# If media is playing and fullscreen, skip locking
+if [[ "$fullscreen" == "true" && "$media_status" == "Playing" ]]; then
+    exit 1
+fi
+
+pidof hyprlock >/dev/null || hyprlock
+exit 0
