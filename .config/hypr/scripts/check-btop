@@ -1,0 +1,13 @@
+#!/bin/bash
+
+btop=$(pgrep -af "kitty.*btop")
+TITLE="btop"
+compare="kitty --title btop -e bash -c exec btop"
+
+if [[ "$btop" != *"$compare"* ]]; then
+    kitty --title "$TITLE" -e bash -c "exec btop" 
+
+    exit 0
+fi
+
+exit 0

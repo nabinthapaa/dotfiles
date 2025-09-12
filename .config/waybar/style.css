@@ -53,23 +53,12 @@
   border-radius: 0px 5px 5px 0px;
 }
 
-#custom-stream_status {
-  background-color: #101010;
-  padding: 0.5rem 1rem;
-  margin: 5px 0;
-  border-radius: 0px 5px 5px 0px;
+#cpu { 
+  margin-left: 1rem;
+  border-radius: 5px 0px 0px 5px;
 }
-
-#custom-stream_status.up {
-  color: #c3e88d;
-}
-
-#custom-stream_status.warning {
-  color: #ff9e64;
-}
-
-#custom-stream_status.down {
-  color: #ea999c;
+#memory { 
+  margin-right: 1rem;
 }
 
 #memory {
@@ -127,6 +116,5 @@
 
 #tray {
   margin-right: 1rem;
-  margin-left: 1rem;
   border-radius: 5px;
 }

@@ -1,5 +1,5 @@
 {
-  "layer": "top",
+  "layer": "bottom",
   "position": "top",
   "modules-left": ["hyprland/workspaces"],
   "modules-center": ["clock"],
@@ -24,13 +24,13 @@
     "spacing": 10,
   },
   "clock": {
-    "timezone": "Asia/Kathmandu",
+    "timezone": "$TZ",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
     "format": "{:%Y/%m/%d - %H:%M}",
   },
   "network": {
     "format-wifi": "  {essid} {bandwidthTotalBits}",
-    "format-ethernet": "󰈀 {ifname} {bandwidthTotalBits}",
+    "format-ethernet": "󰈀 Wired {bandwidthTotalBits}",
     "format-disconnected": "Disconnected",
     "format": "{ifname} {bandwidthTotalBits}",
     "tooltip-format": " {essid} via {gwaddri}",
@@ -40,16 +40,18 @@
     "interval": 5,
     "tooltip": false,
     "max-length": 50,
-    "on-click": "nm-applet toggle",
+    "on-click": "$HOME/.config/hypr/scripts/check-nmtui",
   },
   "cpu": {
     "interval": 1,
     "format": "  {icon0}{icon1}{icon2}{icon3} {usage:>2}%",
     "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
+		"on-click": "$HOME/.config/hypr/scripts/check-btop"
   },
   "memory": {
     "interval": 30,
     "format": "  {used:0.1f}G/{total:0.1f}G",
+		"on-click": "$HOME/.config/hypr/scripts/check-btop"
   },
   "pulseaudio": {
     "format": "{icon} {volume}%",
