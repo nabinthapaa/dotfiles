@@ -33,7 +33,7 @@ echo "[*] Installing general tools..."
 paru -S --needed ripgrep jq tldr go fzf btop easyeffects lazygit
 
 echo "[*] Installing fonts..."
-paru -S --needed ttf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols
+paru -S --needed ttf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols noto-fonts-emoji
 
 echo "[*] Installing Duolingo web fonts (for Japanese)..."
 paru -S --needed adobe-source-han-sans-jp-fonts adobe-source-han-serif-jp-fonts
