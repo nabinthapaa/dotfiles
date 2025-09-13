@@ -19,6 +19,22 @@
       "default": "",
     },
   },
+	"battery": {
+		"format": "{icon} {capacity}%",
+		"tooltip-format-charging": "Full in: {time}\nPower Draw: {power}watts\nHealth: {health}%\nCycles: {cycles}",
+		"tooltip-format-discharging": "Full in: {time}\nPower Draw: {power}watts\nHealth: {health}%\nCycles: {cycles}",
+		"format-icons": {
+			"default": " ",
+			"charging": "", 
+			"warning": "",
+			"critical": ""
+		},
+
+		"states" : {
+			"warning" : 30,
+			"critical" : 20,
+		},
+	},
   "tray": {
     "icon-size": 21,
     "spacing": 10,
