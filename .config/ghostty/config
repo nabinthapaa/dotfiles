@@ -2,8 +2,8 @@
 # equals doesn't matter.
 background = 282c34
 foreground = ffffff
-background-opacity = 0.9
-theme  = tokyonight-storm
+background-opacity = 0.8
+theme  = "TokyoNight Storm"
 gtk-titlebar = false
 window-padding-y = 0 
 font-family = "JetBrainsMono Nerd Font"
