@@ -3,3 +3,5 @@ if uwsm check may-start; then
 fi
 
 [[ -f ~/.bashrc ]] && . ~/.bashrc
+
+. "$HOME/.local/share/../bin/env"

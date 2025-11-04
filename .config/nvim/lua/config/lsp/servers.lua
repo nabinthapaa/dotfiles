@@ -4,7 +4,13 @@ M.servers = {
 	"lua_ls",
 	"gopls",
 	"intelephense",
-	"vtsls"
+	"laravel_ls",
+	"vtsls",
+	"clangd",
+	"rust_analyzer",
+	"pyright",
+	"ruff",
+	"sqlls"
 }
 
 return M;

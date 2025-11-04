@@ -154,31 +154,31 @@ esac
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# # laravel
-# export PATH="$HOME/.config/composer/vendor/bin:$PATH"
-#
-# # Generated for envman. Do not edit.
-# [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
-#
-# __docker_env_auto() {
-#   local docker_file=".docker-service"
-#   local current_dir="$PWD"
-#
-#   if [[ -f "$current_dir/$docker_file" ]]; then
-#     local service_name
-#     service_name=$(head -n 1 "$current_dir/$docker_file")
-#
-#     if [[ "$APP_SERVICE" != "$service_name" ]]; then
-#       export APP_SERVICE="$service_name"
-#       export NVIM_LARAVEL_ENV="docker-compose"
-#     fi
-#   else
-#     if [[ -n "$APP_SERVICE" ]]; then
-#       unset APP_SERVICE
-#       unset NVIM_LARAVEL_ENV
-#     fi
-#   fi
-# }
+# laravel
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+__docker_env_auto() {
+  local docker_file=".docker-service"
+  local current_dir="$PWD"
+
+  if [[ -f "$current_dir/$docker_file" ]]; then
+    local service_name
+    service_name=$(head -n 1 "$current_dir/$docker_file")
+
+    if [[ "$APP_SERVICE" != "$service_name" ]]; then
+      export APP_SERVICE="$service_name"
+      export NVIM_LARAVEL_ENV="docker-compose"
+    fi
+  else
+    if [[ -n "$APP_SERVICE" ]]; then
+      unset APP_SERVICE
+      unset NVIM_LARAVEL_ENV
+    fi
+  fi
+}
 
 
 # Ctrl+f
@@ -199,4 +199,6 @@ bind -x '"\es": "tmux-sessionizer -s 3"'
 SCRIPTS="$HOME/.local/scripts/"
 export PATH="$SCRIPTS:$PATH"
 
-# PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
+PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
+
+. "$HOME/.local/share/../bin/env"
