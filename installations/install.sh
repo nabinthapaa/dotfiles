@@ -10,7 +10,7 @@ if [ -d "$HOME/dotfiles/" ]; then
   echo "[*] Removing old config"
   rm -rf "$HOME/dotfiles"
 fi
-git clone https://gitlab.com/erewhonaden23/dotfiles "$HOME/dotfiles"
+git clone https://github.com/nabinthapaa/dotfiles "$HOME/dotfiles"
 cd "$HOME/dotfiles"
 
 if ! command -v paru &>/dev/null; then
