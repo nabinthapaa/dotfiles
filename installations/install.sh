@@ -72,10 +72,13 @@ echo "[*] Installing Rust (non-interactive)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 echo "[*] Updating bash config and symlinking configs"
+
 mkdir -p "$HOME/.config"
-if [ -f "$HOME/.bashrc" ]; then
+
+if [ -f "$HOME/.bashrc" ] && [ ! -L "$HOME/.bashrc" ]; then
   mv "$HOME/.bashrc" "$HOME/.bashrc.bak"
 fi
+
 ln -sf "$HOME/dotfiles/.bashrc" "$HOME/.bashrc"
 ln -sf "$HOME/dotfiles/.profile" "$HOME/.profile"
 ln -sf "$HOME/dotfiles/.config/nvim" "$HOME/.config/nvim"
@@ -107,9 +110,9 @@ echo "[*] Generating color scheme"
 wal -i "$HOME/dotfiles/image/kath.jpg"
 
 echo "[*] Installing tmux sessionizer"
-if [ -d "$HOME/.local/scripts/" ]; then
-  mkdir -p "$HOME/.local/scripts"
-fi
+
+mkdir -p "$HOME/.local/scripts"
+
 curl https://raw.githubusercontent.com/ThePrimeagen/tmux-sessionizer/refs/heads/master/tmux-sessionizer -o $HOME/.local/scripts/tmux-sessionizer
 chmod +x $HOME/.local/scripts/tmux-sessionizer
 
