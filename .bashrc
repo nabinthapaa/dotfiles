@@ -39,6 +39,21 @@ tmp() {
   echo "Switched to temporary directory: $tmpd"
 }
 
+exec_service() {
+  service="$1"
+  shift # remove the first argument
+  docker compose exec "$service" "$@"
+}
+
+refresh_mirrors() {
+  sudo reflector \
+    --country 'Nepal,Singapore,Netherlands' \
+    --protocol https \
+    --sort score \
+    --fastest 10 \
+    --save /etc/pacman.d/mirrorlist
+}
+
 key_help() {
   echo 'tap and hold to repeat key'
   echo 'a: hold: lmeta, tap: a'
@@ -134,7 +149,6 @@ export VIMRUNTIME=$HOME/.local/nvim/share/nvim/runtime
 export NVIM_DIR=$HOME/.local/nvim/
 export PATH="$NVIM_DIR/bin:$PATH"
 
-
 export PATH="$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/go/bin:$HOME/.local/bin:$HOME/.android/cmdline-tools/bin:$HOME/.android/platform-tools:$PATH"
 eval -- "$(/usr/bin/starship init bash --print-full-init)"
 eval "$(zoxide init bash)"
@@ -179,7 +193,6 @@ __docker_env_auto() {
     fi
   fi
 }
-
 
 # Ctrl+f
 bind -x '"\C-f": "tmux-sessionizer"'
