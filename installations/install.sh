@@ -6,14 +6,14 @@ echo "[*] Installing base-devel and git (required for building AUR packages)..."
 sudo pacman -S --needed base-devel git curl
 
 echo "[*] Cloning dotfiles"
-if [ -d  "$HOME/dotfiles/" ]; then 
-		echo "[*] Removing old config"
-		rm -rf "$HOME/dotfiles"
+if [ -d "$HOME/dotfiles/" ]; then
+  echo "[*] Removing old config"
+  rm -rf "$HOME/dotfiles"
 fi
-git clone https://github.com/nabinthapaa/dotfiles "$HOME/dotfiles"
+git clone https://gitlab.com/erewhonaden23/dotfiles "$HOME/dotfiles"
 cd "$HOME/dotfiles"
 
-if ! command -v paru &> /dev/null; then
+if ! command -v paru &>/dev/null; then
   echo "[*] Cloning and installing paru..."
   cd "$HOME"
   git clone https://aur.archlinux.org/paru.git
@@ -47,7 +47,7 @@ paru -S --needed uwsm libnewt
 echo "[*] Installing Discord..."
 paru -S --needed discord
 
-echo "[*] Installing sound service" 
+echo "[*] Installing sound service"
 paru -S --needed pipewire pipewire-pulse wireplumber pavucontrol
 
 echo "[*] Installing Hyprland tools..."
@@ -63,14 +63,13 @@ echo "[*] Installing Docker and adding user to docker group..."
 paru -S --needed docker docker-compose docker-buildx
 
 # Avoid errors if group already exists
-if ! getent group docker > /dev/null; then
-    sudo groupadd docker
+if ! getent group docker >/dev/null; then
+  sudo groupadd docker
 fi
 sudo usermod -aG docker "$USER"
 
 echo "[*] Installing Rust (non-interactive)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
 
 echo "[*] Updating bash config and symlinking configs"
 mkdir -p "$HOME/.config"
@@ -107,36 +106,36 @@ paru -S --needed zen-browser-bin
 echo "[*] Generating color scheme"
 wal -i "$HOME/dotfiles/image/kath.jpg"
 
-echo "[*] Installing tmux sessionizer" 
-if [ -d "$HOME/.local/scripts/" ]; then 
-		mkdir -p "$HOME/.local/scripts"
+echo "[*] Installing tmux sessionizer"
+if [ -d "$HOME/.local/scripts/" ]; then
+  mkdir -p "$HOME/.local/scripts"
 fi
 curl https://raw.githubusercontent.com/ThePrimeagen/tmux-sessionizer/refs/heads/master/tmux-sessionizer -o $HOME/.local/scripts/tmux-sessionizer
 chmod +x $HOME/.local/scripts/tmux-sessionizer
 
-echo "[*] Starting sound service" 
+echo "[*] Starting sound service"
 systemctl --user enable --now pipewire
 systemctl --user enable --now pipewire-pulse
 systemctl --user enable --now wireplumber
 
-# kanata setup 
+# kanata setup
 echo "[*] Setting up kanata"
-if ! getent group uinput > /dev/null; then
-    sudo groupadd uinput
-    echo "[*] Created 'uinput' group."
+if ! getent group uinput >/dev/null; then
+  sudo groupadd uinput
+  echo "[*] Created 'uinput' group."
 fi
 sudo usermod -aG uinput "$USER"
 
-if ! getent group input > /dev/null; then
-    sudo groupadd input
-    echo "[*] Created 'uinput' group."
+if ! getent group input >/dev/null; then
+  sudo groupadd input
+  echo "[*] Created 'uinput' group."
 fi
 sudo usermod -aG input "$USER"
 
 sudo modprobe uinput
-echo "uinput" | sudo tee /etc/modules-load.d/uinput.conf >> /dev/null 
-echo 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' | sudo tee /etc/udev/rules.d/99-uinput.rules >> /dev/null
-echo 'KERNEL=="event*", SUBSYSTEM=="input", GROUP="input", MODE="660"' | sudo tee /etc/udev/rules.d/99-input.rules >> /dev/null
+echo "uinput" | sudo tee /etc/modules-load.d/uinput.conf >>/dev/null
+echo 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' | sudo tee /etc/udev/rules.d/99-uinput.rules >>/dev/null
+echo 'KERNEL=="event*", SUBSYSTEM=="input", GROUP="input", MODE="660"' | sudo tee /etc/udev/rules.d/99-input.rules >>/dev/null
 
 echo "[*] Reloading udm rules"
 sudo udevadm control --reload-rules
