@@ -69,8 +69,10 @@ if ! getent group docker >/dev/null; then
 fi
 sudo usermod -aG docker "$USER"
 
-echo "[*] Installing Rust (non-interactive)..."
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+if ! command -v cargo &>/dev/null; then
+  echo "[*] Installing Rust (non-interactive)..."
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+fi
 
 echo "[*] Updating bash config and symlinking configs"
 
