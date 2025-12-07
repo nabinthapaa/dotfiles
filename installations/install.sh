@@ -16,6 +16,7 @@ cd "$HOME/dotfiles"
 if ! command -v paru &>/dev/null; then
   echo "[*] Cloning and installing paru..."
   cd "$HOME"
+  rm -rf paru
   git clone https://aur.archlinux.org/paru.git
   cd paru
   makepkg -si
