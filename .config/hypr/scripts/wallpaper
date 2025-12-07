@@ -19,27 +19,26 @@ MONITOR_NAME="eDP-1"
 # Hyprpaper config
 HYPRPAPER_CONF="$HOME/.config/hypr/hyprpaper.conf"
 
-
 # ==============================================================================
 # SCRIPT LOGIC
 # ==============================================================================
 
 # Check dependencies
-if ! command -v rofi &> /dev/null || ! command -v magick &> /dev/null; then
-    notify-send "Error: rofi or ImageMagick is not installed."
-    exit 1
+if ! command -v rofi &>/dev/null || ! command -v magick &>/dev/null; then
+  notify-send "Error: rofi or ImageMagick is not installed."
+  exit 1
 fi
 
 # Select image using rofi
-SELECTED_FILE=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) \
-  | while read -r FILE; do
-      echo -en "$FILE\x00icon\x1f$FILE\n"
-    done \
-  | rofi -dmenu -i -p "Select Wallpaper")
+SELECTED_FILE=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) |
+  while read -r FILE; do
+    echo -en "$FILE\x00icon\x1f$FILE\n"
+  done |
+  rofi -dmenu -i -p "Select Wallpaper")
 
 # Cancelled?
 if [[ -z "$SELECTED_FILE" ]]; then
-    exit 0
+  exit 0
 fi
 
 # Create necessary directories
@@ -58,38 +57,39 @@ BLURRED_PATH="$CACHE_DIR/$BLURRED_OUTPUT"
 SQUARED_PATH="$CACHE_DIR/$SQUARED_OUTPUT"
 
 # Get image dimensions for cropping
-read -r WIDTH HEIGHT <<< "$(magick identify -format "%w %h" "$SELECTED_FILE")"
-MIN_DIM=$(( WIDTH < HEIGHT ? WIDTH : HEIGHT ))
+read -r WIDTH HEIGHT <<<"$(magick identify -format "%w %h" "$SELECTED_FILE")"
+MIN_DIM=$((WIDTH < HEIGHT ? WIDTH : HEIGHT))
 
 # Apply wallpaper via hyprctl
 hyprctl hyprpaper reload "$SELECTED_FILE"
 hyprctl hyprpaper wallpaper "$MONITOR_NAME,$SELECTED_FILE"
+hyprctl hyprpaper wallpaper "HDMI-A-1,$SELECTED_FILE"
 notify-send "Wallpaper Changed"
 
 # Generate blurred version if not cached
 if [[ ! -f "$BLURRED_HASH" ]]; then
-    magick "$SELECTED_FILE" -gaussian-blur 0x5 "$BLURRED_HASH"
+  magick "$SELECTED_FILE" -gaussian-blur 0x5 "$BLURRED_HASH"
 fi
 cp "$BLURRED_HASH" "$BLURRED_PATH"
 
 # Generate square version if not cached
 if [[ ! -f "$SQUARED_HASH" ]]; then
-    magick "$SELECTED_FILE" -gravity center -crop "${MIN_DIM}x${MIN_DIM}+0+0" "$SQUARED_HASH"
+  magick "$SELECTED_FILE" -gravity center -crop "${MIN_DIM}x${MIN_DIM}+0+0" "$SQUARED_HASH"
 fi
 cp "$SQUARED_HASH" "$SQUARED_PATH"
 
 # Update hyprpaper.conf
-mapfile -t lines < "$HYPRPAPER_CONF"
+mapfile -t lines <"$HYPRPAPER_CONF"
 for i in "${!lines[@]}"; do
-    line="${lines[i]}"
-    if [[ "$line" =~ ^preload[[:space:]]+= ]]; then
-        lines[i]="preload = $SELECTED_FILE"
-    elif [[ "$line" =~ ^wallpaper[[:space:]]+= ]]; then
-        lines[i]="wallpaper = $MONITOR_NAME,$SELECTED_FILE"
-    fi
+  line="${lines[i]}"
+  if [[ "$line" =~ ^preload[[:space:]]+= ]]; then
+    lines[i]="preload = $SELECTED_FILE"
+  elif [[ "$line" =~ ^wallpaper[[:space:]]+= ]]; then
+    lines[i]="wallpaper = $MONITOR_NAME,$SELECTED_FILE"
+  fi
 done
 
-printf "%s\n" "${lines[@]}" > "$HYPRPAPER_CONF"
+printf "%s\n" "${lines[@]}" >"$HYPRPAPER_CONF"
 
 # Reload Hyprpaper to apply config
 hyprctl reload
