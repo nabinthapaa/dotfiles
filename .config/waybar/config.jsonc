@@ -1,10 +1,15 @@
 {
   "layer": "bottom",
   "position": "top",
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["clock"],
+  "modules-left": [
+    "hyprland/workspaces"
+  ],
+  "modules-center": [
+    "clock", 
+  ],
   "modules-right": [
     "pulseaudio",
+    "custom/bluetooth-volume",
     "battery",
     "network",
     "cpu",
@@ -54,7 +59,7 @@
     "tooltip-format-ethernet": " {ifname}\nIP: {ipaddr}\n up: {bandwidthUpBits} down: {bandwidthDownBits}",
     "tooltip-format-disconnected": "Disconnected",
     "interval": 5,
-    "tooltip": false,
+    "tooltip": true,
     "max-length": 50,
     "on-click": "$HOME/.config/hypr/scripts/check-nmtui",
   },
@@ -64,18 +69,35 @@
     "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
 		"on-click": "$HOME/.config/hypr/scripts/check-btop"
   },
+
   "memory": {
     "interval": 30,
     "format": "  {used:0.1f}G/{total:0.1f}G",
 		"on-click": "$HOME/.config/hypr/scripts/check-btop"
   },
+
   "pulseaudio": {
     "format": "{icon} {volume}%",
     "format-muted": "",
+    "format-bluetooth": " {volume}%",
     "format-icons": {
+      "headphones": "",
+      "handsfree": "",
+      "headset": "",
+      "phone": "",
+      "portable": "",
+      "car": "",
       "default": ["", "", " "],
     },
     "on-click": "pavucontrol",
+  },
+
+  "custom/bluetooth-volume": {
+      "exec": "~/.config/hypr/scripts/bluetooth",
+      "interval": 1,
+      "format": "{text}",
+      "tooltip": true,
+      "on-click": "pavucontrol"
   },
   "custom/lock": {
     "tooltip": false,
