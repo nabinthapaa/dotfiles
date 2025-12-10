@@ -1,51 +1,30 @@
 #!/usr/bin/env bash
 
-CACHE_FILE="$HOME/.cache/bluetooth_battery_last"
-
 # Get default sink
 DEFAULT_SINK=$(pactl info | grep "Default Sink" | awk '{print $3}')
 
 # Check if Bluetooth sink
 if [[ "$DEFAULT_SINK" == *"bluez"* ]]; then
-  # Get connected Bluetooth device
-  CONNECTED_DEVICE=$(bluetoothctl devices | while read -r line; do
-    MAC=$(echo "$line" | awk '{print $2}')
-    if bluetoothctl info "$MAC" | grep -q "Connected: yes"; then
-      echo "$MAC"
-      break
-    fi
-  done)
+  dev=$(upower -e | grep headset)
+  BATTERY=$(upower -i "$dev" | awk -F': +' '/percentage/ {print $2}')
+  BATTERY=${BATTERY%\%}
 
-  if [[ -n "$CONNECTED_DEVICE" ]]; then
-    DEVICE_NAME=$(bluetoothctl info "$CONNECTED_DEVICE" | grep 'Name:' | awk -F': ' '{print $2}')
-    # Battery %
-    BATTERY=$(bluetooth_battery "$CONNECTED_DEVICE" 2>/dev/null | awk '{gsub(/%/,""); print $NF}')
-
-    if [[ -z "$BATTERY" ]]; then
-      BATTERY=$(cat "$CACHE_FILE" 2>/dev/null || echo "0")
-    else
-      echo "$BATTERY" >"$CACHE_FILE"
-    fi
-
-    # Battery icon mapping
-    if ((BATTERY <= 20)); then
-      BAT_ICON=""
-    elif ((BATTERY <= 40)); then
-      BAT_ICON=""
-    elif ((BATTERY <= 60)); then
-      BAT_ICON=""
-    elif ((BATTERY <= 80)); then
-      BAT_ICON=""
-    else
-      BAT_ICON=""
-    fi
-
-    # Bar output
-    ICON="$VOL_ICON $VOL $BAT_ICON $BATTERY%"
-    TOOLTIP="$DEVICE_NAME: $BATTERY%"
-    echo "$ICON"
-    echo "$TOOLTIP"
+  # Battery icon mapping
+  if ((BATTERY <= 20)); then
+    BAT_ICON=""
+  elif ((BATTERY <= 40)); then
+    BAT_ICON=""
+  elif ((BATTERY <= 60)); then
+    BAT_ICON=""
+  elif ((BATTERY <= 80)); then
+    BAT_ICON=""
+  else
+    BAT_ICON=""
   fi
-fi
 
-# Output for Hyprland
+  # Bar output
+  ICON=" $BAT_ICON $BATTERY%"
+  TOOLTIP="$DEVICE_NAME: $BATTERY%"
+  echo "$ICON"
+  echo "$TOOLTIP"
+fi

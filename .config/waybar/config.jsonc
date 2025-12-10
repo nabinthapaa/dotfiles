@@ -94,7 +94,7 @@
 
   "custom/bluetooth-volume": {
       "exec": "~/.config/hypr/scripts/bluetooth",
-      "interval": 1,
+      "interval": 1000,
       "format": "{text}",
       "tooltip": true,
       "on-click": "pavucontrol"
