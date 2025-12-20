@@ -143,11 +143,11 @@ source <(fzf --bash)
 
 # export ANDROID_HOME=$HOME/.android/
 # export CHROME_EXECUTABLE=/usr/bin/chromium
-# export VIMRUNTIME=/usr/share/nvim/runtime
+export VIMRUNTIME=/usr/share/nvim/runtime
 
-export VIMRUNTIME=$HOME/.local/nvim/share/nvim/runtime
-export NVIM_DIR=$HOME/.local/nvim/
-export PATH="$NVIM_DIR/bin:$PATH"
+# export VIMRUNTIME=$HOME/.local/nvim/share/nvim/runtime
+# export NVIM_DIR=$HOME/.local/nvim/
+# export PATH="$NVIM_DIR/bin:$PATH"
 
 export PATH="$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/go/bin:$HOME/.local/bin:$HOME/.android/cmdline-tools/bin:$HOME/.android/platform-tools:$PATH"
 eval -- "$(/usr/bin/starship init bash --print-full-init)"
@@ -214,4 +214,4 @@ export PATH="$SCRIPTS:$PATH"
 
 PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
 
-. "$HOME/.local/share/../bin/env"
+# . "$HOME/.local/share/../bin/env"
