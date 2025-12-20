@@ -53,6 +53,6 @@ My custom arch linux installation and setup using simple bash script
 ## Installation 
 This will install bunch of linux tools and configuration files to files to begin with
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nabinthapaa/dotfiles/refs/heads/main/installations/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nabinthapaa/dotfiles/refs/heads/main/installations/install.sh | bash -i
 ```
 
