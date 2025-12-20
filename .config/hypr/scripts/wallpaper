@@ -14,7 +14,7 @@ BLURRED_OUTPUT="blurred_wallpaper.png"
 SQUARED_OUTPUT="square_image.png"
 
 # Monitor name
-MONITOR_NAME="eDP-1"
+MONITOR_NAME="eDP-2"
 
 # Hyprpaper config
 HYPRPAPER_CONF="$HOME/.config/hypr/hyprpaper.conf"
