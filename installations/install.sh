@@ -83,7 +83,7 @@ if [ -f "$HOME/.bashrc" ] && [ ! -L "$HOME/.bashrc" ]; then
 fi
 
 ln -sf "$HOME/dotfiles/.bashrc" "$HOME/.bashrc"
-ln -sf "$HOME/dotfiles/.profile" "$HOME/.profile"
+ln -sf "$HOME/dotfiles/.profile" "$HOME/.bash_profile"
 ln -sf "$HOME/dotfiles/.config/nvim" "$HOME/.config/nvim"
 ln -sf "$HOME/dotfiles/.config/ghostty" "$HOME/.config/ghostty"
 ln -sf "$HOME/dotfiles/.config/easyeffects" "$HOME/.config/easyeffects"
@@ -96,6 +96,7 @@ ln -sf "$HOME/dotfiles/.config/xdg-desktop-portal" "$HOME/.config/xdg-desktop-po
 ln -sf "$HOME/dotfiles/.config/dunst" "$HOME/.config/dunst"
 ln -sf "$HOME/dotfiles/.config/rofi" "$HOME/.config/rofi"
 ln -sf "$HOME/dotfiles/.config/wal" "$HOME/.config/wal"
+ln -sf "$HOME/dotfiles/.config/uwsm" "$HOME/.config/uwsm"
 
 # install nvm for node
 echo "[*] Installing nvm"

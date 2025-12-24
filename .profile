@@ -4,4 +4,4 @@ fi
 
 [[ -f ~/.bashrc ]] && . ~/.bashrc
 
-. "$HOME/.local/share/../bin/env"
+# . "$HOME/.local/share/../bin/env"
