@@ -52,7 +52,7 @@ echo "[*] Installing sound service"
 paru -S --needed pipewire pipewire-pulse wireplumber pavucontrol
 
 echo "[*] Installing Hyprland tools..."
-paru -S --needed hyprpaper hyprshot hyprlock wlogout-git rofi-wayland waybar wl-clipboard pywal hypridle
+paru -S --needed hyprland hyprpaper hyprshot hyprlock rofi-wayland waybar wl-clipboard pywal hypridle
 
 echo "[*] Installing xdg-desktop-portal support..."
 paru -S --needed xdg-desktop-portal-gtk xdg-desktop-portal-hyprland
@@ -62,6 +62,9 @@ paru -S --noconfirm ffmpeg aalib ascii-image-converter-bin
 
 echo "[*] Installing Docker and adding user to docker group..."
 paru -S --needed docker docker-compose docker-buildx
+
+echo "[*] Installing wifi and bluetooh utilies..."
+paru -S --needed networkmanager bluez bluez-utils
 
 # Avoid errors if group already exists
 if ! getent group docker >/dev/null; then
