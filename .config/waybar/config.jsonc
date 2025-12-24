@@ -2,7 +2,9 @@
   "layer": "bottom",
   "position": "top",
   "modules-left": [
-    "hyprland/workspaces"
+    "hyprland/workspaces",
+    "memory",
+    "cpu",
   ],
   "modules-center": [
     "clock", 
@@ -12,8 +14,6 @@
     "custom/bluetooth-volume",
     "battery",
     "network",
-    "cpu",
-    "memory",
     "tray",
     "custom/lock",
   ],

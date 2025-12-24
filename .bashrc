@@ -213,5 +213,3 @@ SCRIPTS="$HOME/.local/scripts/"
 export PATH="$SCRIPTS:$PATH"
 
 PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
-
-# . "$HOME/.local/share/../bin/env"

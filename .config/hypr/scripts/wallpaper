@@ -34,7 +34,7 @@ SELECTED_FILE=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png
   while read -r FILE; do
     echo -en "$FILE\x00icon\x1f$FILE\n"
   done |
-  rofi -dmenu -i -p "Select Wallpaper")
+  rofi -dmenu -i -p "Select Wallpaper: ")
 
 # Cancelled?
 if [[ -z "$SELECTED_FILE" ]]; then

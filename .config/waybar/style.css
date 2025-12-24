@@ -55,13 +55,11 @@
 }
 
 #cpu { 
-  margin-left: 1rem;
-  border-radius: 5px 0px 0px 5px;
+  border-radius: 0px 5px 5px 0px;
 }
 
 #memory {
-  border-radius: 0px 5px 5px 0px;
-  margin-right: 1rem;
+  border-radius: 5px 0px 0px 5px;
 }
 
 #clock {
@@ -124,5 +122,6 @@
 
 #tray {
   margin-right: 1rem;
+  margin-left: 1rem;
   border-radius: 5px;
 }
