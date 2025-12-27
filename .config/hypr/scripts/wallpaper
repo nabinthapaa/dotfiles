@@ -9,12 +9,9 @@ WALLPAPER_DIR="$HOME/wallpaper"
 CACHE_DIR="$HOME/.cache/wal"
 MAGICK_CACHE="$HOME/.cache/ImageMagick"
 
-# Output filenames (used by other tools like swaylock etc.)
+# Output filenames
 BLURRED_OUTPUT="blurred_wallpaper.png"
 SQUARED_OUTPUT="square_image.png"
-
-# Monitor name
-MONITOR_NAME="eDP-2"
 
 # Hyprpaper config
 HYPRPAPER_CONF="$HOME/.config/hypr/hyprpaper.conf"
@@ -24,10 +21,13 @@ HYPRPAPER_CONF="$HOME/.config/hypr/hyprpaper.conf"
 # ==============================================================================
 
 # Check dependencies
-if ! command -v rofi &>/dev/null || ! command -v magick &>/dev/null; then
-  notify-send "Error: rofi or ImageMagick is not installed."
+if ! command -v rofi &>/dev/null || ! command -v magick &>/dev/null || ! command -v hyprctl &>/dev/null; then
+  notify-send "Error: Required dependencies (rofi, magick, hyprctl) are not installed."
   exit 1
 fi
+
+# Get list of active monitors
+MONITORS=$(hyprctl monitors -j | jq -r '.[] | .name')
 
 # Select image using rofi
 SELECTED_FILE=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) |
@@ -44,54 +44,49 @@ fi
 # Create necessary directories
 mkdir -p "$CACHE_DIR" "$MAGICK_CACHE"
 
-# Generate hash for the selected file
+# Generate hash for caching
 FILE_HASH=$(sha256sum "$SELECTED_FILE" | cut -d ' ' -f1)
-
-# Create hashed cache file paths (safe naming)
-BASENAME=$(basename "$SELECTED_FILE")
 BLURRED_HASH="$CACHE_DIR/${FILE_HASH}_blurred.png"
 SQUARED_HASH="$CACHE_DIR/${FILE_HASH}_square.png"
-
-# Fixed output paths (always updated)
 BLURRED_PATH="$CACHE_DIR/$BLURRED_OUTPUT"
 SQUARED_PATH="$CACHE_DIR/$SQUARED_OUTPUT"
 
-# Get image dimensions for cropping
+# Pre-load the wallpaper
+hyprctl hyprpaper preload "$SELECTED_FILE"
+
+# Apply wallpaper to ALL detected monitors
+for MONITOR in $MONITORS; do
+  hyprctl hyprpaper wallpaper "$MONITOR,$SELECTED_FILE"
+done
+
+notify-send "Wallpaper Changed" "Applied to: $(echo $MONITORS | tr '\n' ' ')"
+
+# --- Image Processing (Async for speed) ---
+
+# Get dimensions and process
 read -r WIDTH HEIGHT <<<"$(magick identify -format "%w %h" "$SELECTED_FILE")"
 MIN_DIM=$((WIDTH < HEIGHT ? WIDTH : HEIGHT))
 
-# Apply wallpaper via hyprctl
-hyprctl hyprpaper reload "$SELECTED_FILE"
-hyprctl hyprpaper wallpaper "$MONITOR_NAME,$SELECTED_FILE"
-hyprctl hyprpaper wallpaper "HDMI-A-1,$SELECTED_FILE"
-notify-send "Wallpaper Changed"
-
-# Generate blurred version if not cached
 if [[ ! -f "$BLURRED_HASH" ]]; then
   magick "$SELECTED_FILE" -gaussian-blur 0x5 "$BLURRED_HASH"
 fi
 cp "$BLURRED_HASH" "$BLURRED_PATH"
 
-# Generate square version if not cached
 if [[ ! -f "$SQUARED_HASH" ]]; then
   magick "$SELECTED_FILE" -gravity center -crop "${MIN_DIM}x${MIN_DIM}+0+0" "$SQUARED_HASH"
 fi
 cp "$SQUARED_HASH" "$SQUARED_PATH"
 
-# Update hyprpaper.conf
-mapfile -t lines <"$HYPRPAPER_CONF"
-for i in "${!lines[@]}"; do
-  line="${lines[i]}"
-  if [[ "$line" =~ ^preload[[:space:]]+= ]]; then
-    lines[i]="preload = $SELECTED_FILE"
-  elif [[ "$line" =~ ^wallpaper[[:space:]]+= ]]; then
-    lines[i]="wallpaper = $MONITOR_NAME,$SELECTED_FILE"
-  fi
+# --- Update Hyprpaper Config File ---
+
+# We rebuild the config to ensure all monitors are accounted for
+echo "preload = $SELECTED_FILE" >"$HYPRPAPER_CONF"
+for MONITOR in $MONITORS; do
+  echo "wallpaper = $MONITOR,$SELECTED_FILE" >>"$HYPRPAPER_CONF"
 done
 
-printf "%s\n" "${lines[@]}" >"$HYPRPAPER_CONF"
+# Optional: Keep other lines if you have custom splashes
+echo "splash = false" >>"$HYPRPAPER_CONF"
 
-# Reload Hyprpaper to apply config
 hyprctl reload
-
-notify-send "Lockscreen Changed"
+notify-send "Lockscreen & Config Updated"
