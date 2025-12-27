@@ -12,6 +12,7 @@ MAGICK_CACHE="$HOME/.cache/ImageMagick"
 # Output filenames
 BLURRED_OUTPUT="blurred_wallpaper.png"
 SQUARED_OUTPUT="square_image.png"
+NOTIFICATION_OUTPUT="notification_image.png"
 
 # Hyprpaper config
 HYPRPAPER_CONF="$HOME/.config/hypr/hyprpaper.conf"
@@ -48,8 +49,10 @@ mkdir -p "$CACHE_DIR" "$MAGICK_CACHE"
 FILE_HASH=$(sha256sum "$SELECTED_FILE" | cut -d ' ' -f1)
 BLURRED_HASH="$CACHE_DIR/${FILE_HASH}_blurred.png"
 SQUARED_HASH="$CACHE_DIR/${FILE_HASH}_square.png"
+NOTIFICATION_HASH="$CACHE_DIR/${FILE_HASH}_notification.png"
 BLURRED_PATH="$CACHE_DIR/$BLURRED_OUTPUT"
 SQUARED_PATH="$CACHE_DIR/$SQUARED_OUTPUT"
+SQUARED_PATH="$CACHE_DIR/$NOTIFICATION_OUTPUT"
 
 # Pre-load the wallpaper
 hyprctl hyprpaper preload "$SELECTED_FILE"
@@ -76,6 +79,11 @@ if [[ ! -f "$SQUARED_HASH" ]]; then
   magick "$SELECTED_FILE" -gravity center -crop "${MIN_DIM}x${MIN_DIM}+0+0" "$SQUARED_HASH"
 fi
 cp "$SQUARED_HASH" "$SQUARED_PATH"
+
+if [[ ! -f "$NOTIFICATION_HASH" ]]; then
+  magick "$SELECTED_FILE" -gravity center -crop "40x40+0+0" "$NOTIFICATION_HASH"
+fi
+cp "$NOTIFICATION_HASH" "$NOTIFICATION_PATH"
 
 # --- Update Hyprpaper Config File ---
 

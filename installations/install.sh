@@ -100,6 +100,7 @@ ln -sf "$HOME/dotfiles/.config/dunst" "$HOME/.config/dunst"
 ln -sf "$HOME/dotfiles/.config/rofi" "$HOME/.config/rofi"
 ln -sf "$HOME/dotfiles/.config/wal" "$HOME/.config/wal"
 ln -sf "$HOME/dotfiles/.config/uwsm" "$HOME/.config/uwsm"
+ln -sf "$HOME/dotfiles/.config/lazygit" "$HOME/.config/lazygit"
 
 # install nvm for node
 echo "[*] Installing nvm"
