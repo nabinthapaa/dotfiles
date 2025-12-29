@@ -63,6 +63,7 @@ for MONITOR in $MONITORS; do
 done
 
 notify-send "Wallpaper Changed" "Applied to: $(echo $MONITORS | tr '\n' ' ')"
+wal -i $SELECTED_FILE
 
 # --- Image Processing (Async for speed) ---
 
