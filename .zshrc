@@ -200,3 +200,5 @@ export PATH="$SCRIPTS:$PATH"
 
 # Docker environment auto-update on prompt
 PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
+
+. "$HOME/.local/share/../bin/env"
