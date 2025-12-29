@@ -52,8 +52,8 @@ confirm_choice="$(echo -e "$confirm_options" | rofi -dmenu -i -p "Save to Pictur
 if [ "$confirm_choice" = "󰄬 Save Screenshot" ]; then
   mv "$temp_file" "$final_file"
   wl-copy <"$final_file"
-  notify-send "Screenshot Saved" "Saved to $final_file" -i "$final_file"
+  notify-send --icon $final_file "Screenshot Saved" "Saved to $final_file" -i "$final_file"
 else
+  notify-send --icon $temp_file "Screenshot Discarded" "The temporary image was deleted"
   rm -f "$temp_file"
-  notify-send "Screenshot Discarded" "The temporary image was deleted"
 fi
