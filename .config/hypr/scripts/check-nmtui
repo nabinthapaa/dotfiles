@@ -1,10 +1,10 @@
 #!/bin/bash
 
-TITLE="impala"
-nmtui=$(pgrep -af "kitty.*impala")
+TITLE="nmtui"
+nmtui=$(pgrep -af "kitty.*nmtui")
 
 if [[ "$nmtui" != *"nmtui"* ]]; then
-  kitty --title "$TITLE" --e bash -c 'exec impala'
+  kitty --title "$TITLE" --e bash -c 'exec nmtui'
   exit 0
 fi
 
