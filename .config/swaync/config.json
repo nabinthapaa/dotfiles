@@ -29,6 +29,12 @@
     "mpris",
     "buttons-grid"
   ],
+  "scripts": {
+    "sound-script": {
+      "exec": "paplay ~/dotfiles/.config/swaync/notification.wav",
+      "app-name": ".*"
+    }
+  },
   "widget-config": {
     "title": {
       "text": "Notification Center",
