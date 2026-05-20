@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-qs_config="~/dotfiles/.config/quickshell/"
+qs_config="$HOME/dotfiles/.config/quickshell/"
 
 monitor="$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null | head -n 1)"
 if [[ -z "${monitor}" ]]; then

@@ -113,7 +113,7 @@ Scope {
 
         Image {
           anchors.fill: parent
-          source: "file:///~/.cache/wal/blurred_wallpaper.png"
+          source: "file://"+ Quickshell.env("HOME") +"/.cache/wal/blurred_wallpaper.png"
           fillMode: Image.PreserveAspectCrop
           cache: false
         }

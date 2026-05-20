@@ -110,7 +110,7 @@ Item {
     }
 
     Quickshell.execDetached([
-      "~/dotfiles/.config/quickshell/scripts/apply-wallpaper.sh",
+      Quickshell.env("HOME") + "/dotfiles/.config/quickshell/scripts/apply-wallpaper.sh",
       path
     ]);
 

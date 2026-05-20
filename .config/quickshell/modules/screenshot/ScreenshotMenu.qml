@@ -96,7 +96,7 @@ Scope {
         interval: 180
         repeat: false
         onTriggered: Quickshell.execDetached([
-          "~/dotfiles/.config/quickshell/scripts/take-screenshot.sh",
+          Quickshell.env("HOME") + "/dotfiles/.config/quickshell/scripts/take-screenshot.sh",
           mode
         ])
       }
