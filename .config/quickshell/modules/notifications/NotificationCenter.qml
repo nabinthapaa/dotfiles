@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
+import QtMultimedia
 import "../../shared"
 
 Scope {
@@ -40,6 +41,12 @@ Scope {
     id: theme
   }
 
+  SoundEffect {
+    id: notificationSound
+    source: Qt.resolvedUrl("../../audio/gen_nothing_noti_1_3.ogg")
+    volume: 0.7
+  }
+
   NotificationServer {
     id: notificationServer
 
@@ -55,6 +62,7 @@ Scope {
 
       if (!notification.lastGeneration) {
         root.pushToast(notification);
+        notificationSound.play()
       }
 
       notification.closed.connect(() => root.removeToast(notification));
