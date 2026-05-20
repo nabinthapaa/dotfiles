@@ -118,7 +118,6 @@ list_sizes() {
 }
 
 # export VIM=nvim
-export VIM=nvim
 
 export SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
 export LANG=en_US.UTF-8
@@ -241,3 +240,5 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
 PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
 
 . "$HOME/.local/share/../bin/env"
+unset VIM
+unset VIMRUNTIME
