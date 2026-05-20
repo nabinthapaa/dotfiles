@@ -16,6 +16,9 @@ NOTIFICATION_OUTPUT="notification_image.png"
 
 # Hyprpaper config
 HYPRPAPER_CONF="$HOME/.config/hypr/hyprpaper.conf"
+CURRENT_WALLPAPER="$HOME/.config/hypr/cache/current_wallpaper"
+MATUGEN_CONF="$HOME/.config/matugen/config.toml"
+QUICKSHELL_CONF="$HOME/dotfiles/.config/quickshell/shell.qml"
 
 # ==============================================================================
 # SCRIPT LOGIC
@@ -44,6 +47,8 @@ fi
 
 # Create necessary directories
 mkdir -p "$CACHE_DIR" "$MAGICK_CACHE"
+mkdir -p "$(dirname "$CURRENT_WALLPAPER")"
+printf '%s\n' "$SELECTED_FILE" >"$CURRENT_WALLPAPER"
 
 # Generate hash for caching
 FILE_HASH=$(sha256sum "$SELECTED_FILE" | cut -d ' ' -f1)
@@ -52,7 +57,7 @@ SQUARED_HASH="$CACHE_DIR/${FILE_HASH}_square.png"
 NOTIFICATION_HASH="$CACHE_DIR/${FILE_HASH}_notification.png"
 BLURRED_PATH="$CACHE_DIR/$BLURRED_OUTPUT"
 SQUARED_PATH="$CACHE_DIR/$SQUARED_OUTPUT"
-SQUARED_PATH="$CACHE_DIR/$NOTIFICATION_OUTPUT"
+NOTIFICATION_PATH="$CACHE_DIR/$NOTIFICATION_OUTPUT"
 
 # Pre-load the wallpaper
 hyprctl hyprpaper preload "$SELECTED_FILE"
@@ -63,7 +68,20 @@ for MONITOR in $MONITORS; do
 done
 
 notify-send "Wallpaper Changed" "Applied to: $(echo $MONITORS | tr '\n' ' ')"
-wal -i $SELECTED_FILE
+wal -i "$SELECTED_FILE"
+
+if command -v matugen &>/dev/null && [[ -f "$MATUGEN_CONF" ]]; then
+  matugen image "$SELECTED_FILE" --prefer saturation --mode dark --config "$MATUGEN_CONF"
+
+  if command -v quickshell &>/dev/null && [[ -f "$QUICKSHELL_CONF" ]]; then
+    pkill quickshell 2>/dev/null || true
+    sleep 1
+    export QT_QPA_PLATFORM=wayland
+    export XDG_CURRENT_DESKTOP=Hyprland
+    export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+    quickshell --path "$QUICKSHELL_CONF" >/tmp/quickshell.log 2>&1 &
+  fi
+fi
 
 # --- Image Processing (Async for speed) ---
 
