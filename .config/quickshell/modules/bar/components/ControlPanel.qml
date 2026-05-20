@@ -349,7 +349,7 @@ PanelWindow {
         Quickshell.execDetached([
           "qs",
           "-p",
-          "/home/nabin/new-dotfiles/.config/quickshell/nabin",
+          "~/dotfiles/.config/quickshell/",
           "ipc",
           "call",
           "screenshotMenu." + monitor.name,

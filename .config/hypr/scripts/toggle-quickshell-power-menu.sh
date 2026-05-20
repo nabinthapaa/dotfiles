@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-qs_config="~/new-dotfiles/.config/quickshell/"
+qs_config="~/dotfiles/.config/quickshell/"
 log_file="/tmp/quickshell-power-menu-ipc.log"
 printf "%s\n" "power menu helper invoked at $(date --iso-8601=seconds)" >>"${log_file}"
 

@@ -110,7 +110,7 @@ Item {
     }
 
     Quickshell.execDetached([
-      "/home/nabin/new-dotfiles/.config/quickshell/nabin/scripts/apply-wallpaper.sh",
+      "~/dotfiles/.config/quickshell/scripts/apply-wallpaper.sh",
       path
     ]);
 

@@ -96,7 +96,7 @@ Scope {
         interval: 180
         repeat: false
         onTriggered: Quickshell.execDetached([
-          "/home/nabin/new-dotfiles/.config/quickshell/nabin/scripts/take-screenshot.sh",
+          "~/dotfiles/.config/quickshell/scripts/take-screenshot.sh",
           mode
         ])
       }
