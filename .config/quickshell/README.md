@@ -21,15 +21,20 @@ contains `shell.qml` as a named config.
   theme/Matugen.qml                 # generated Material color roles
   modules/notifications/
     NotificationCenter.qml          # notification daemon and toast popups
+  modules/packages/
+    PackageSearcher.qml             # pacman/AUR package search and terminal handoff
   modules/osd/
     Osd.qml                         # bottom-center status overlay
   modules/power/
     PowerMenu.qml                   # fullscreen lock/logout menu
   modules/screenshot/
     ScreenshotMenu.qml              # screenshot type selector
+  modules/system/
+    SystemMonitor.qml               # btop-style system monitor popup
   modules/bar/TopBar.qml            # one top bar per screen
   modules/bar/components/
     AppLauncher.qml                 # Material application launcher
+    ClipboardLauncher.qml           # cliphist-backed clipboard picker
     WallpaperLauncher.qml           # wallpaper picker with preview
     WorkspaceList.qml               # Hyprland workspace buttons
     ClockWidget.qml                 # centered time and date
@@ -40,6 +45,8 @@ contains `shell.qml` as a named config.
     ControlPanel.qml                # full-height right-side sliding panel
   scripts/
     apply-wallpaper.sh              # applies selected wallpaper from Quickshell
+    system-monitor-snapshot.sh      # collects CPU, memory, disk, net, process stats
+    system-monitor-kill.sh          # guarded pid-only process termination helper
     take-screenshot.sh              # captures selected screenshot type
 ```
 
@@ -113,6 +120,72 @@ The Hyprland `SUPER+SPACE` bind uses
 `~/dotfiles/.config/hypr/scripts/toggle-quickshell-launcher.sh`, which resolves
 the focused Hyprland monitor and calls the matching `appLauncher.<monitor>`
 target with the `-p` selector.
+
+## Clipboard Launcher Notes
+
+`ClipboardLauncher.qml` opens from `SUPER+V` or the clipboard button beside the
+system tray. It loads text and image entries from `cliphist list`, filters their
+preview text, and copies the selected entry back to the clipboard with
+`cliphist decode | wl-copy`.
+
+Clipboard features:
+
+- Pinned items are tracked by cliphist id in
+  `~/.local/state/quickshell/clipboard-pins` and are sorted to the top.
+- Image previews are decoded into `/tmp/quickshell-clipboard-previews`.
+- Delete uses `cliphist delete`; Clear all uses `cliphist wipe`.
+- Private mode creates `~/.local/state/quickshell/clipboard-private`; the
+  store wrapper ignores new clipboard changes while it exists.
+- Quick paste copies the selected item and sends Ctrl+V with `wtype` or
+  `ydotool` when either tool is installed.
+
+Clipboard storage is started from Hyprland with
+`~/.config/hypr/scripts/store-clipboard.sh`. That wrapper skips storage while
+private mode is enabled and ignores active windows matching common browsers and
+password managers.
+
+Each screen gets an IPC target named `clipboardLauncher.<screen>`.
+
+Useful clipboard IPC commands:
+
+```sh
+qs -p ~/dotfiles/.config/quickshell ipc call clipboardLauncher.eDP-1 open
+qs -p ~/dotfiles/.config/quickshell ipc call clipboardLauncher.eDP-1 close
+qs -p ~/dotfiles/.config/quickshell ipc call clipboardLauncher.eDP-1 toggle
+qs -p ~/dotfiles/.config/quickshell ipc call clipboardLauncher.eDP-1 isOpen
+```
+
+The Hyprland `SUPER+V` bind uses
+`~/dotfiles/.config/hypr/scripts/toggle-quickshell-clipboard.sh`.
+
+## Package Searcher Notes
+
+`PackageSearcher.qml` is a native Quickshell package browser for Arch systems.
+It opens through IPC and follows the same per-monitor target pattern as the
+other shell popups:
+
+```sh
+qs -p ~/dotfiles/.config/quickshell ipc call packages.eDP-1 open
+qs -p ~/dotfiles/.config/quickshell ipc call packages.eDP-1 close
+qs -p ~/dotfiles/.config/quickshell ipc call packages.eDP-1 toggle
+qs -p ~/dotfiles/.config/quickshell ipc call packages.eDP-1 isOpen
+```
+
+The Hyprland `SUPER+I` bind uses
+`~/dotfiles/.config/hypr/scripts/toggle-quickshell-packages.sh`.
+
+Package data is produced by small helper scripts:
+
+- `scripts/package-search.sh` uses local `pacman` for official/installed
+  packages and the official AUR RPC v5 API for AUR search.
+- `scripts/package-detail.sh` uses `pacman -Si/-Qi` or AUR RPC info.
+- `scripts/package-action.sh` validates package names and opens install,
+  remove, update, and PKGBUILD commands in a terminal.
+
+Install/remove/update actions are never run silently. Official packages are
+handed to `sudo pacman` in a terminal. AUR packages are handed to `paru` when
+available, then `yay`; if neither exists the UI keeps AUR search/view actions
+available but disables AUR install and PKGBUILD actions.
 
 ## Wallpaper Launcher Notes
 

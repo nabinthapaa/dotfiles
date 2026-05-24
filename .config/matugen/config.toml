@@ -20,3 +20,59 @@ output_path = '~/.config/quickshell/theme/Matugen.json'
 [templates.quickshell_colors]
 input_path = '~/.config/matugen/templates/quickshell/colors.json'
 output_path = '~/.local/state/quickshell/generated/colors.json'
+
+[templates.gtk3_colors_repo]
+input_path = '~/.config/matugen/templates/gtk/colors.css'
+output_path = '~/dotfiles/.config/gtk-3.0/colors.css'
+
+[templates.gtk3_colors_live]
+input_path = '~/.config/matugen/templates/gtk/colors.css'
+output_path = '~/.config/gtk-3.0/colors.css'
+
+[templates.gtk3_css_repo]
+input_path = '~/.config/matugen/templates/gtk/gtk.css'
+output_path = '~/dotfiles/.config/gtk-3.0/gtk.css'
+
+[templates.gtk3_css_live]
+input_path = '~/.config/matugen/templates/gtk/gtk.css'
+output_path = '~/.config/gtk-3.0/gtk.css'
+
+[templates.gtk3_settings_repo]
+input_path = '~/.config/matugen/templates/gtk/settings.ini'
+output_path = '~/dotfiles/.config/gtk-3.0/settings.ini'
+
+[templates.gtk3_settings_live]
+input_path = '~/.config/matugen/templates/gtk/settings.ini'
+output_path = '~/.config/gtk-3.0/settings.ini'
+
+[templates.gtk4_colors_repo]
+input_path = '~/.config/matugen/templates/gtk/colors.css'
+output_path = '~/dotfiles/.config/gtk-4.0/colors.css'
+
+[templates.gtk4_colors_live]
+input_path = '~/.config/matugen/templates/gtk/colors.css'
+output_path = '~/.config/gtk-4.0/colors.css'
+
+[templates.gtk4_css_repo]
+input_path = '~/.config/matugen/templates/gtk/gtk.css'
+output_path = '~/dotfiles/.config/gtk-4.0/gtk.css'
+
+[templates.gtk4_css_live]
+input_path = '~/.config/matugen/templates/gtk/gtk.css'
+output_path = '~/.config/gtk-4.0/gtk.css'
+
+[templates.gtk4_dark_css_repo]
+input_path = '~/.config/matugen/templates/gtk/gtk.css'
+output_path = '~/dotfiles/.config/gtk-4.0/gtk-dark.css'
+
+[templates.gtk4_dark_css_live]
+input_path = '~/.config/matugen/templates/gtk/gtk.css'
+output_path = '~/.config/gtk-4.0/gtk-dark.css'
+
+[templates.gtk4_settings_repo]
+input_path = '~/.config/matugen/templates/gtk/settings.ini'
+output_path = '~/dotfiles/.config/gtk-4.0/settings.ini'
+
+[templates.gtk4_settings_live]
+input_path = '~/.config/matugen/templates/gtk/settings.ini'
+output_path = '~/.config/gtk-4.0/settings.ini'

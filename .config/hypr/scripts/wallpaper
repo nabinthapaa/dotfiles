@@ -72,6 +72,8 @@ wal -i "$SELECTED_FILE"
 
 if command -v matugen &>/dev/null && [[ -f "$MATUGEN_CONF" ]]; then
   matugen image "$SELECTED_FILE" --prefer saturation --mode dark --config "$MATUGEN_CONF"
+  gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" >/dev/null 2>&1 || true
+  gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" >/dev/null 2>&1 || true
 
   if command -v quickshell &>/dev/null && [[ -f "$QUICKSHELL_CONF" ]]; then
     pkill quickshell 2>/dev/null || true

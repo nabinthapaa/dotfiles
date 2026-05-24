@@ -2,8 +2,8 @@
 set -u
 
 qs_config="$HOME/dotfiles/.config/quickshell/"
-log_file="/tmp/quickshell-screenshot-menu-ipc.log"
-printf "%s\n" "screenshot helper invoked at $(date --iso-8601=seconds)" >>"${log_file}"
+log_file="/tmp/quickshell-clipboard-ipc.log"
+printf "%s\n" "clipboard helper invoked at $(date --iso-8601=seconds)" >>"${log_file}"
 
 target_monitor() {
   hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null | head -n 1
@@ -20,8 +20,8 @@ call_target() {
 
   [[ -z "${monitor}" ]] && return 1
 
-  output="$(qs -p "${qs_config}" ipc call "screenshotMenu.${monitor}" toggle 2>&1)" || status=$?
-  printf "%s\n" "target=screenshotMenu.${monitor} status=${status} output=${output}" >>"${log_file}"
+  output="$(qs -p "${qs_config}" ipc call "clipboardLauncher.${monitor}" toggle 2>&1)" || status=$?
+  printf "%s\n" "target=clipboardLauncher.${monitor} status=${status} output=${output}" >>"${log_file}"
 
   if [[ ${status} -ne 0 ]]; then
     return 1
@@ -65,5 +65,5 @@ if try_ipc; then
   exit 0
 fi
 
-notify-send "Quickshell Screenshot" "Could not open screenshot menu. Check ${log_file} and /tmp/quickshell-nabin.log." >/dev/null 2>&1 || true
+notify-send "Quickshell Clipboard" "Could not open clipboard history. Check ${log_file} and /tmp/quickshell-nabin.log." >/dev/null 2>&1 || true
 exit 1

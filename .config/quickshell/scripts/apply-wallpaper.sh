@@ -56,6 +56,8 @@ fi
 
 if command -v matugen >/dev/null 2>&1 && [[ -f "$matugen_conf" ]]; then
   matugen image "$selected_file" --prefer saturation --mode dark --config "$matugen_conf" >/dev/null 2>&1 || true
+  gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" >/dev/null 2>&1 || true
+  gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" >/dev/null 2>&1 || true
 fi
 
 if command -v magick >/dev/null 2>&1; then

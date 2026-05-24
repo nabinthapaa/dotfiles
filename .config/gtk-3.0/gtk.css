@@ -1,0 +1,263 @@
+@import 'colors.css';
+
+* {
+  caret-color: @accent_color;
+  outline-color: @accent_color;
+  -gtk-outline-radius: 10px;
+}
+
+window,
+dialog,
+messagedialog,
+.background {
+  background-color: @window_bg_color;
+  color: @window_fg_color;
+}
+
+headerbar,
+.titlebar,
+toolbar {
+  background-color: @headerbar_bg_color;
+  color: @headerbar_fg_color;
+  border-color: @headerbar_border_color;
+  min-height: 38px;
+  padding: 0 6px;
+}
+
+menubar {
+  background-color: @headerbar_bg_color;
+  color: @headerbar_fg_color;
+  min-height: 30px;
+  padding: 0 4px;
+}
+
+menu,
+popover,
+.popover,
+.menu {
+  background-color: @popover_bg_color;
+  color: @popover_fg_color;
+  border: 1px solid @borders;
+  border-radius: 12px;
+  padding: 6px;
+}
+
+menuitem {
+  border-radius: 8px;
+  padding: 5px 8px;
+}
+
+menuitem:hover {
+  background-color: @surface_hover_color;
+}
+
+viewport,
+scrolledwindow,
+stack,
+paned,
+notebook,
+notebook > stack {
+  background-color: @window_bg_color;
+  color: @window_fg_color;
+}
+
+treeview,
+treeview.view,
+list,
+listview,
+columnview,
+iconview,
+flowbox,
+textview,
+textview text,
+.view {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+}
+
+row,
+list row,
+flowboxchild {
+  min-height: 30px;
+  border-radius: 8px;
+  padding: 3px 8px;
+}
+
+row:hover,
+list row:hover,
+flowboxchild:hover {
+  background-color: @surface_hover_color;
+}
+
+treeview.view:selected,
+treeview.view:selected:focus,
+row:selected,
+list row:selected,
+flowboxchild:selected,
+iconview:selected,
+.view:selected,
+.view:selected:focus {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+  border-radius: 8px;
+}
+
+button {
+  background-color: @card_bg_color;
+  color: @card_fg_color;
+  border: 1px solid @borders;
+  border-radius: 12px;
+  min-height: 28px;
+  padding: 4px 10px;
+}
+
+button:hover {
+  background-color: @surface_hover_color;
+}
+
+button:checked,
+button:active {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+  border-color: @accent_color;
+}
+
+button.flat,
+button.image-button,
+headerbar button,
+toolbar button {
+  background-color: transparent;
+  border-color: transparent;
+  border-radius: 10px;
+  min-height: 28px;
+  min-width: 28px;
+  padding: 3px 6px;
+}
+
+button.flat:hover,
+button.image-button:hover,
+headerbar button:hover,
+toolbar button:hover {
+  background-color: @surface_hover_color;
+  border-color: transparent;
+}
+
+entry,
+spinbutton,
+searchentry,
+combobox {
+  background-color: @surface_high_color;
+  color: @window_fg_color;
+  border: 1px solid @borders;
+  border-radius: 12px;
+  min-height: 30px;
+  padding: 4px 10px;
+}
+
+entry:focus,
+spinbutton:focus,
+searchentry:focus,
+combobox:focus,
+textview:focus,
+treeview.view:focus,
+.view:focus {
+  border-color: @accent_color;
+}
+
+entry placeholder,
+searchentry placeholder {
+  color: @muted_fg_color;
+}
+
+selection {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+}
+
+separator {
+  background-color: @borders;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+notebook > header {
+  background-color: @surface_high_color;
+  border-color: @borders;
+  padding: 3px;
+}
+
+notebook > header > tabs > tab {
+  background-color: transparent;
+  color: @muted_fg_color;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  min-height: 28px;
+  padding: 4px 10px;
+  margin: 1px;
+}
+
+notebook > header > tabs > tab:hover {
+  background-color: @surface_hover_color;
+}
+
+notebook > header > tabs > tab:checked {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+}
+
+sidebar,
+.sidebar,
+placessidebar,
+placessidebar list {
+  background-color: @sidebar_bg_color;
+  color: @sidebar_fg_color;
+}
+
+placessidebar row {
+  border-radius: 10px;
+  margin: 1px 4px;
+  padding: 4px 8px;
+}
+
+switch {
+  border-radius: 999px;
+}
+
+switch:checked,
+checkbutton check:checked,
+radiobutton radio:checked {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+  border-color: @accent_color;
+}
+
+scrollbar slider {
+  background-color: @scrollbar_outline_color;
+  border-radius: 999px;
+  min-width: 5px;
+  min-height: 5px;
+}
+
+scrollbar slider:hover,
+scrollbar slider:active {
+  background-color: @accent_color;
+}
+
+scrollbar trough {
+  background-color: transparent;
+}
+
+tooltip {
+  background-color: @surface_high_color;
+  color: @window_fg_color;
+  border: 1px solid @borders;
+  border-radius: 10px;
+  padding: 5px 8px;
+}
+
+label:disabled,
+button:disabled,
+entry:disabled {
+  color: @muted_fg_color;
+  opacity: 0.62;
+}

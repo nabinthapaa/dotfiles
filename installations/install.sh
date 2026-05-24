@@ -1,157 +1,329 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -Eeuo pipefail
 
-echo "[*] Installing base-devel and git (required for building AUR packages)..."
-sudo pacman -S --needed base-devel git curl
+readonly DOTFILES_REPO="https://github.com/nabinthapaa/dotfiles"
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
-echo "[*] Cloning dotfiles"
-if [ -d "$HOME/dotfiles/" ]; then
-  echo "[*] Removing old config"
-  rm -rf "$HOME/dotfiles"
+SCRIPT_REPO_DIR=""
+if command -v git >/dev/null 2>&1; then
+  SCRIPT_REPO_DIR="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || true)"
 fi
-git clone https://github.com/nabinthapaa/dotfiles "$HOME/dotfiles"
-cd "$HOME/dotfiles"
+readonly SCRIPT_REPO_DIR
+readonly DOTFILES_DIR="${DOTFILES_DIR:-${SCRIPT_REPO_DIR:-$HOME/dotfiles}}"
+readonly PARU_BUILD_DIR="${PARU_BUILD_DIR:-$HOME/.cache/paru-build}"
 
-if ! command -v paru &>/dev/null; then
-  echo "[*] Cloning and installing paru..."
-  cd "$HOME"
-  rm -rf paru
-  git clone https://aur.archlinux.org/paru.git
-  cd paru
-  makepkg -si
-  cd "$HOME"
-else
-  echo "[*] paru already installed, skipping."
-fi
+PACMAN_PACKAGES=(
+  base-devel
+  git
+  curl
+)
 
-cd "$HOME"
+AUR_PACKAGES=(
+  neovim
+  lua51
+  luarocks
+  tmux
+  dunst
+  kanata-bin
+  starship
+  ripgrep
+  jq
+  tldr
+  go
+  fzf
+  btop
+  easyeffects
+  lazygit
+  ttf-font-awesome
+  ttf-jetbrains-mono-nerd
+  ttf-nerd-fonts-symbols
+  noto-fonts-emoji
+  adobe-source-han-sans-jp-fonts
+  adobe-source-han-serif-jp-fonts
+  ghostty
+  uwsm
+  libnewt
+  discord
+  pipewire
+  pipewire-pulse
+  wireplumber
+  pavucontrol
+  hyprland
+  hyprpaper
+  hyprshot
+  hyprlock
+  rofi-wayland
+  waybar
+  wl-clipboard
+  cliphist
+  wtype
+  python-pywal
+  hypridle
+  quickshell
+  matugen
+  swaync
+  waypaper
+  swww
+  brightnessctl
+  playerctl
+  kitty
+  thunar
+  kdeconnect
+  polkit-gnome
+  blueman
+  xsettingsd
+  network-manager-applet
+  libnotify
+  xdg-utils
+  xdg-desktop-portal-gtk
+  xdg-desktop-portal-hyprland
+  ffmpeg
+  aalib
+  ascii-image-converter-bin
+  docker
+  docker-compose
+  docker-buildx
+  networkmanager
+  bluez
+  bluez-utils
+  zen-browser-bin
+)
 
-echo "[*] Installing Neovim and related tools..."
-paru -S --needed neovim lua51 luarocks tmux dunst kanata-bin starship
+CONFIG_DIRS=(
+  dunst
+  easyeffects
+  ghostty
+  gtk-3.0
+  gtk-4.0
+  hypr
+  kanata
+  kitty
+  lazygit
+  matugen
+  nvim
+  quickshell
+  rofi
+  swaync
+  systemd
+  tmux
+  tmux-sessionizer
+  uwsm
+  vim
+  wal
+  waybar
+  waypaper
+  xdg-desktop-portal
+  xsettingsd
+)
 
-echo "[*] Installing general tools..."
-paru -S --needed ripgrep jq tldr go fzf btop easyeffects lazygit
+log() {
+  printf '\n[*] %s\n' "$*"
+}
 
-echo "[*] Installing fonts..."
-paru -S --needed ttf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols noto-fonts-emoji
+warn() {
+  printf '\n[!] %s\n' "$*" >&2
+}
 
-echo "[*] Installing Duolingo web fonts (for Japanese)..."
-paru -S --needed adobe-source-han-sans-jp-fonts adobe-source-han-serif-jp-fonts
+die() {
+  printf '\n[ERROR] %s\n' "$*" >&2
+  exit 1
+}
 
-echo "[*] Installing Ghostty terminal..."
-paru -S --needed ghostty
+backup_path() {
+  local path="$1"
+  local backup
 
-echo "[*] Installing Universal Wayland Session Manager(UWSM)..."
-paru -S --needed uwsm libnewt
+  if [[ ! -e "$path" || -L "$path" ]]; then
+    return 0
+  fi
 
-echo "[*] Installing Discord..."
-paru -S --needed discord
+  backup="${path}.bak.$(date +%Y%m%d%H%M%S)"
+  log "Backing up $path to $backup"
+  mv "$path" "$backup"
+}
 
-echo "[*] Installing sound service"
-paru -S --needed pipewire pipewire-pulse wireplumber pavucontrol
+link_path() {
+  local source="$1"
+  local target="$2"
 
-echo "[*] Installing Hyprland tools..."
-paru -S --needed hyprland hyprpaper hyprshot hyprlock rofi-wayland waybar wl-clipboard pywal hypridle
+  if [[ ! -e "$source" ]]; then
+    warn "Skipping missing source: $source"
+    return 0
+  fi
 
-echo "[*] Installing xdg-desktop-portal support..."
-paru -S --needed xdg-desktop-portal-gtk xdg-desktop-portal-hyprland
+  backup_path "$target"
+  ln -sfnT "$source" "$target"
+}
 
-echo "[*] Installing misc media tools..."
-paru -S --noconfirm ffmpeg aalib ascii-image-converter-bin
+require_arch() {
+  [[ -r /etc/arch-release ]] || die "This installer only supports Arch Linux and Arch-based systems."
+  command -v pacman >/dev/null 2>&1 || die "pacman is required."
+  command -v sudo >/dev/null 2>&1 || die "sudo is required."
+  [[ "${EUID}" -ne 0 ]] || die "Run this script as your normal user, not root."
+}
 
-echo "[*] Installing Docker and adding user to docker group..."
-paru -S --needed docker docker-compose docker-buildx
+install_pacman_packages() {
+  log "Installing base packages"
+  sudo pacman -Syu --needed --noconfirm "${PACMAN_PACKAGES[@]}"
+}
 
-echo "[*] Installing wifi and bluetooh utilies..."
-paru -S --needed networkmanager bluez bluez-utils
+sync_dotfiles() {
+  log "Syncing dotfiles into $DOTFILES_DIR"
 
-# Avoid errors if group already exists
-if ! getent group docker >/dev/null; then
-  sudo groupadd docker
-fi
-sudo usermod -aG docker "$USER"
+  if [[ -n "$SCRIPT_REPO_DIR" && "$DOTFILES_DIR" == "$SCRIPT_REPO_DIR" ]]; then
+    log "Using current dotfiles checkout"
+    return 0
+  fi
 
-if ! command -v cargo &>/dev/null; then
-  echo "[*] Installing Rust (non-interactive)..."
+  if [[ -d "$DOTFILES_DIR/.git" ]]; then
+    git -C "$DOTFILES_DIR" pull --ff-only
+    return 0
+  fi
+
+  if [[ -e "$DOTFILES_DIR" ]]; then
+    backup_path "$DOTFILES_DIR"
+  fi
+
+  git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+}
+
+install_paru() {
+  if command -v paru >/dev/null 2>&1; then
+    log "paru is already installed"
+    return 0
+  fi
+
+  log "Installing paru from the AUR"
+  rm -rf "$PARU_BUILD_DIR"
+  git clone https://aur.archlinux.org/paru.git "$PARU_BUILD_DIR"
+  (
+    cd "$PARU_BUILD_DIR"
+    makepkg -si --needed --noconfirm
+  )
+}
+
+install_aur_packages() {
+  log "Installing system and user packages"
+  paru -S --needed --noconfirm "${AUR_PACKAGES[@]}"
+}
+
+setup_groups() {
+  local group
+
+  log "Configuring user groups"
+  for group in docker uinput input; do
+    if ! getent group "$group" >/dev/null; then
+      sudo groupadd "$group"
+    fi
+    sudo usermod -aG "$group" "$USER"
+  done
+}
+
+setup_rust() {
+  if command -v cargo >/dev/null 2>&1; then
+    log "Rust is already installed"
+    return 0
+  fi
+
+  log "Installing Rust with rustup"
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-fi
+}
 
-echo "[*] Updating bash config and symlinking configs"
+setup_shell_and_configs() {
+  local config
 
-mkdir -p "$HOME/.config"
+  log "Symlinking shell and app configs"
+  mkdir -p "$HOME/.config"
 
-if [ -f "$HOME/.bashrc" ] && [ ! -L "$HOME/.bashrc" ]; then
-  mv "$HOME/.bashrc" "$HOME/.bashrc.bak"
-fi
+  link_path "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
+  link_path "$DOTFILES_DIR/.profile" "$HOME/.bash_profile"
 
-ln -sf "$HOME/dotfiles/.bashrc" "$HOME/.bashrc"
-ln -sf "$HOME/dotfiles/.profile" "$HOME/.bash_profile"
-ln -sf "$HOME/dotfiles/.config/nvim" "$HOME/.config/nvim"
-ln -sf "$HOME/dotfiles/.config/ghostty" "$HOME/.config/ghostty"
-ln -sf "$HOME/dotfiles/.config/easyeffects" "$HOME/.config/easyeffects"
-ln -sf "$HOME/dotfiles/.config/hypr" "$HOME/.config/hypr"
-ln -sf "$HOME/dotfiles/.config/kanata" "$HOME/.config/kanata"
-ln -sf "$HOME/dotfiles/.config/tmux" "$HOME/.config/tmux"
-ln -sf "$HOME/dotfiles/.config/waybar" "$HOME/.config/waybar"
-ln -sf "$HOME/dotfiles/.config/tmux-sessionizer" "$HOME/.config/tmux-sessionizer"
-ln -sf "$HOME/dotfiles/.config/xdg-desktop-portal" "$HOME/.config/xdg-desktop-portal"
-ln -sf "$HOME/dotfiles/.config/dunst" "$HOME/.config/dunst"
-ln -sf "$HOME/dotfiles/.config/rofi" "$HOME/.config/rofi"
-ln -sf "$HOME/dotfiles/.config/wal" "$HOME/.config/wal"
-ln -sf "$HOME/dotfiles/.config/uwsm" "$HOME/.config/uwsm"
-ln -sf "$HOME/dotfiles/.config/lazygit" "$HOME/.config/lazygit"
+  for config in "${CONFIG_DIRS[@]}"; do
+    link_path "$DOTFILES_DIR/.config/$config" "$HOME/.config/$config"
+  done
+}
 
-# install nvm for node
-echo "[*] Installing nvm"
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+setup_nvm() {
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    log "Installing nvm"
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+  else
+    log "nvm is already installed"
+  fi
 
-nvm install --lts
+  # shellcheck disable=SC1091
+  [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
+  nvm install --lts
+}
 
-echo "[*] Installing zen browser"
-paru -S --needed zen-browser-bin
+setup_tmux_sessionizer() {
+  local target="$HOME/.local/scripts/tmux-sessionizer"
 
-echo "[*] Generating color scheme"
-wal -i "$HOME/dotfiles/image/kath.jpg"
+  log "Installing tmux-sessionizer"
+  mkdir -p "$(dirname "$target")"
+  curl -fsSL https://raw.githubusercontent.com/ThePrimeagen/tmux-sessionizer/refs/heads/master/tmux-sessionizer -o "$target"
+  chmod +x "$target"
+}
 
-echo "[*] Installing tmux sessionizer"
+setup_wallpaper_colors() {
+  local wallpaper="$DOTFILES_DIR/image/kath.jpg"
 
-mkdir -p "$HOME/.local/scripts"
+  if [[ -f "$wallpaper" ]] && command -v wal >/dev/null 2>&1; then
+    log "Generating pywal color scheme"
+    wal -i "$wallpaper"
+  fi
+}
 
-curl https://raw.githubusercontent.com/ThePrimeagen/tmux-sessionizer/refs/heads/master/tmux-sessionizer -o $HOME/.local/scripts/tmux-sessionizer
-chmod +x $HOME/.local/scripts/tmux-sessionizer
+enable_user_service() {
+  local service="$1"
 
-echo "[*] Starting sound service"
-systemctl --user enable --now pipewire
-systemctl --user enable --now pipewire-pulse
-systemctl --user enable --now wireplumber
+  if systemctl --user list-unit-files "$service" >/dev/null 2>&1; then
+    systemctl --user enable --now "$service" || warn "Could not enable user service: $service"
+  else
+    warn "Skipping missing user service: $service"
+  fi
+}
 
-# kanata setup
-echo "[*] Setting up kanata"
-if ! getent group uinput >/dev/null; then
-  sudo groupadd uinput
-  echo "[*] Created 'uinput' group."
-fi
-sudo usermod -aG uinput "$USER"
+setup_services() {
+  log "Enabling user services"
+  enable_user_service pipewire.service
+  enable_user_service pipewire-pulse.service
+  enable_user_service wireplumber.service
+  enable_user_service hypridle.service
+}
 
-if ! getent group input >/dev/null; then
-  sudo groupadd input
-  echo "[*] Created 'uinput' group."
-fi
-sudo usermod -aG input "$USER"
+setup_kanata() {
+  log "Configuring uinput rules for kanata"
+  sudo modprobe uinput
+  printf 'uinput\n' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null
+  printf '%s\n' 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' |
+    sudo tee /etc/udev/rules.d/99-uinput.rules >/dev/null
+  printf '%s\n' 'KERNEL=="event*", SUBSYSTEM=="input", GROUP="input", MODE="660"' |
+    sudo tee /etc/udev/rules.d/99-input.rules >/dev/null
 
-sudo modprobe uinput
-echo "uinput" | sudo tee /etc/modules-load.d/uinput.conf >>/dev/null
-echo 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' | sudo tee /etc/udev/rules.d/99-uinput.rules >>/dev/null
-echo 'KERNEL=="event*", SUBSYSTEM=="input", GROUP="input", MODE="660"' | sudo tee /etc/udev/rules.d/99-input.rules >>/dev/null
+  sudo udevadm control --reload-rules
+  sudo udevadm trigger
+}
 
-echo "[*] Reloading udm rules"
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+main() {
+  require_arch
+  install_pacman_packages
+  sync_dotfiles
+  install_paru
+  install_aur_packages
+  setup_groups
+  setup_rust
+  setup_shell_and_configs
+  setup_nvm
+  setup_wallpaper_colors
+  setup_tmux_sessionizer
+  setup_services
+  setup_kanata
 
-systemctl --user enable --now hypridle.service
+  log "All done. Log out and back in for Docker, input, and uinput group changes to take effect."
+}
 
-echo "✅ All done! You may need to restart or log out and back in for Docker group changes to take effect."
+main "$@"

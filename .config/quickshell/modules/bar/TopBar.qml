@@ -83,6 +83,34 @@ Scope {
             anchors.verticalCenter: parent.verticalCenter
           }
 
+          ClipboardLauncher {
+            id: clipboardLauncher
+            parentWindow: bar
+            anchors.verticalCenter: parent.verticalCenter
+          }
+
+          Rectangle {
+            width: theme.controlSize
+            height: theme.controlSize
+            radius: theme.radiusLarge
+            color: clipboardLauncher.open ? theme.accentContainer : clipboardArea.containsMouse ? theme.surfaceHover : theme.surface
+
+            Text {
+              anchors.centerIn: parent
+              text: "󰅇"
+              color: clipboardLauncher.open ? theme.accentContainerForeground : theme.foreground
+              font.pixelSize: 15
+            }
+
+            MouseArea {
+              id: clipboardArea
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: clipboardLauncher.open = !clipboardLauncher.open
+            }
+          }
+
           SidebarButton {
             anchors.verticalCenter: parent.verticalCenter
             active: controlPanel.open
