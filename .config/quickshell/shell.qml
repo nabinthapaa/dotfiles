@@ -3,6 +3,7 @@
 import Quickshell
 import "modules/bar"
 import "modules/notifications"
+import "modules/lockscreen"
 import "modules/packages"
 import "modules/osd"
 import "modules/power"
@@ -16,6 +17,10 @@ ShellRoot {
 
   NotificationCenter {
     id: notifications
+  }
+
+  LockScreen {
+    notificationServer: notifications.server
   }
 
   PowerMenu {}

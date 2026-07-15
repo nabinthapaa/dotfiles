@@ -1,7 +1,7 @@
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
-import QtMultimedia
 import "../../shared"
 
 Scope {
@@ -41,10 +41,12 @@ Scope {
     id: theme
   }
 
-  SoundEffect {
+  property string soundPath: Quickshell.env("HOME") + "/dotfiles/.config/quickshell/audio/notification.wav"
+
+  Process {
     id: notificationSound
-    source: Qt.resolvedUrl("../../audio/gen_nothing_noti_1_3.ogg")
-    volume: 0.7
+
+    command: ["sh", "-c", "if command -v pw-play >/dev/null 2>&1; then exec pw-play \"$1\"; elif command -v paplay >/dev/null 2>&1; then exec paplay \"$1\"; elif command -v canberra-gtk-play >/dev/null 2>&1; then exec canberra-gtk-play -f \"$1\"; fi", "notification-sound", root.soundPath]
   }
 
   NotificationServer {
@@ -62,7 +64,8 @@ Scope {
 
       if (!notification.lastGeneration) {
         root.pushToast(notification);
-        notificationSound.play()
+        notificationSound.running = false;
+        notificationSound.running = true;
       }
 
       notification.closed.connect(() => root.removeToast(notification));

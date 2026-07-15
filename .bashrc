@@ -242,3 +242,7 @@ PROMPT_COMMAND="__docker_env_auto; $PROMPT_COMMAND"
 . "$HOME/.local/share/../bin/env"
 unset VIM
 unset VIMRUNTIME
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/nabin/.local/bin:$PATH"

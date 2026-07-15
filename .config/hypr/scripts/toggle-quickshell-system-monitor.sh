@@ -58,7 +58,7 @@ fi
 printf "%s\n" "starting quickshell config" >>"${log_file}"
 pkill quickshell >/dev/null 2>&1 || true
 sleep 0.4
-qs -d -p "${qs_config}" >/tmp/quickshell-nabin.log 2>&1
+qs -p "${qs_config}" >/tmp/quickshell-nabin.log 2>&1 &
 sleep 1.2
 
 if try_ipc; then

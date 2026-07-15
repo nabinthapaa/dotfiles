@@ -21,6 +21,11 @@ PACMAN_PACKAGES=(
 
 AUR_PACKAGES=(
   neovim
+  zsh
+  zsh-autosuggestions
+  zsh-completions
+  fzf-tab
+  zsh-fast-syntax-highlighting-git
   lua51
   luarocks
   tmux
@@ -29,6 +34,7 @@ AUR_PACKAGES=(
   starship
   ripgrep
   jq
+  socat
   tldr
   go
   fzf
@@ -238,10 +244,30 @@ setup_shell_and_configs() {
 
   link_path "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
   link_path "$DOTFILES_DIR/.profile" "$HOME/.bash_profile"
+  link_path "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
+  link_path "$DOTFILES_DIR/.zprofile" "$HOME/.zprofile"
 
   for config in "${CONFIG_DIRS[@]}"; do
     link_path "$DOTFILES_DIR/.config/$config" "$HOME/.config/$config"
   done
+}
+
+setup_login_shell() {
+  local zsh_path
+
+  zsh_path="$(command -v zsh || true)"
+  if [[ -z "$zsh_path" ]]; then
+    warn "zsh is not installed; skipping login shell change"
+    return 0
+  fi
+
+  if [[ "$SHELL" == "$zsh_path" ]]; then
+    log "zsh is already the login shell"
+    return 0
+  fi
+
+  log "Changing login shell to zsh"
+  sudo chsh -s "$zsh_path" "$USER"
 }
 
 setup_nvm() {
@@ -266,6 +292,22 @@ setup_tmux_sessionizer() {
   mkdir -p "$(dirname "$target")"
   curl -fsSL https://raw.githubusercontent.com/ThePrimeagen/tmux-sessionizer/refs/heads/master/tmux-sessionizer -o "$target"
   chmod +x "$target"
+}
+
+setup_tmux_plugins() {
+  local tpm_dir="$HOME/.config/tmux/plugins/tpm"
+
+  log "Installing tmux plugin manager"
+  mkdir -p "$(dirname "$tpm_dir")"
+
+  if [[ -d "$tpm_dir/.git" ]]; then
+    git -C "$tpm_dir" pull --ff-only
+  else
+    rm -rf "$tpm_dir"
+    git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+  fi
+
+  "$tpm_dir/bin/install_plugins" || warn "TPM plugin install failed. Open tmux and press prefix + I after checking network access."
 }
 
 setup_wallpaper_colors() {
@@ -317,9 +359,11 @@ main() {
   setup_groups
   setup_rust
   setup_shell_and_configs
+  setup_login_shell
   setup_nvm
   setup_wallpaper_colors
   setup_tmux_sessionizer
+  setup_tmux_plugins
   setup_services
   setup_kanata
 

@@ -21,6 +21,16 @@ contains `shell.qml` as a named config.
   theme/Matugen.qml                 # generated Material color roles
   modules/notifications/
     NotificationCenter.qml          # notification daemon and toast popups
+  modules/lockscreen/
+    LockScreen.qml                  # secure WlSessionLock controller and IPC
+    LockSurface.qml                 # one lock surface per monitor
+    LockCard.qml                    # primary unlock card
+    PasswordField.qml               # password input and unlock button
+    PowerActions.qml                # confirmed suspend/reboot/shutdown/logout
+    StatusChips.qml                 # battery, network, locked-time chips
+    MediaWidget.qml                 # compact MPRIS controls
+    LockActions.js                  # centralized session action commands
+    pam/password.conf               # password-only PAM auth for quickshell
   modules/packages/
     PackageSearcher.qml             # pacman/AUR package search and terminal handoff
   modules/osd/
@@ -237,8 +247,82 @@ Keyboard behavior:
 - Escape or clicking the backdrop closes the menu.
 
 Each screen gets an IPC target named `powerMenu.<screen>`. The Hyprland
-`SUPER+L` bind uses `~/dotfiles/.config/hypr/scripts/toggle-quickshell-power-menu.sh`,
+`SUPER+SHIFT+P` bind uses `~/dotfiles/.config/hypr/scripts/toggle-quickshell-power-menu.sh`,
 which resolves the focused Hyprland monitor and toggles the matching IPC target.
+
+## Lockscreen Notes
+
+`modules/lockscreen/LockScreen.qml` is a secure Quickshell session-lock
+prototype. It uses `Quickshell.Wayland.WlSessionLock` and creates a
+`WlSessionLockSurface` per screen, so it is not a fake fullscreen overlay. PAM
+authentication is handled by `Quickshell.Services.Pam.PamContext` with the
+local `modules/lockscreen/pam/password.conf` file.
+
+Current behavior:
+
+- Primary screen, currently the first `Quickshell.screens` entry, gets the full
+  unlock card.
+- Other screens get wallpaper, scrim, clock, date, and confirmed power actions.
+- Wallpaper and avatar imagery come from `~/.cache/wal/blurred_wallpaper.png`,
+  `~/.cache/wal/square_image.png`, and `~/.face` when present.
+- Colors come from `shared/Theme.qml` and generated Matugen roles.
+- The lock card shows clock, date, user avatar/name, password field, unlock
+  button, status chips, compact media controls, and private notification count.
+- Notification bodies are not shown on the lockscreen.
+- Power actions require confirmation and use centralized commands in
+  `LockActions.js`.
+
+Useful lockscreen IPC commands:
+
+```sh
+qs -p /home/nabin/dotfiles/.config/quickshell ipc call lock lock
+qs -p /home/nabin/dotfiles/.config/quickshell ipc call lock isLocked
+```
+
+Quickshell's IPC CLI requires both a target and function, so the command is
+`qs ipc call lock lock`, not just `qs ipc call lock`.
+
+Hyprland and hypridle now use the Quickshell lock IPC. Hyprlock remains
+installed as the fallback on `SUPER+SHIFT+L`. To test the Quickshell lock
+manually, first ensure the main shell is running, then run:
+
+```sh
+qs -p /home/nabin/dotfiles/.config/quickshell ipc call lock lock
+```
+
+Current Hyprland binds:
+
+```ini
+bind = SUPER, L, exec, /home/nabin/dotfiles/.config/quickshell/scripts/lock-session.sh
+bind = SUPER SHIFT, L, exec, hyprlock
+```
+
+Current hypridle lock commands:
+
+```ini
+general {
+    lock_cmd = /home/nabin/dotfiles/.config/quickshell/scripts/lock-session.sh
+    before_sleep_cmd = /home/nabin/dotfiles/.config/quickshell/scripts/lock-session.sh
+    after_sleep_cmd = hyprctl dispatch dpms on
+}
+```
+
+The wrapper first tries `qs ipc call lock lock`, starts the main Quickshell
+config if IPC is unavailable, retries, and finally falls back to `hyprlock`.
+
+Testing checklist:
+
+- Manual lock opens on all monitors.
+- Correct password unlocks.
+- Wrong password clears the field, shows an error, and refocuses input.
+- Multi-monitor layout behaves acceptably.
+- Suspend while locked and resume from suspend are safe.
+- Power buttons require confirmation.
+- Notification content is not leaked.
+- Media controls do not steal password focus.
+- Reloading Quickshell while unlocked does not lock unexpectedly.
+- Keep the `SUPER+SHIFT+L` hyprlock fallback until the Quickshell lock has been
+  tested across suspend/resume and monitor hotplug.
 
 ## Screenshot Selector Notes
 
