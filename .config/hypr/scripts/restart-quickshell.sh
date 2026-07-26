@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -u
 
+if pgrep -x "quickshell" >/dev/null; then
+  pkill -x "quickshell"
+  exit 0
+fi
+
+if pgrep -x "qs" >/dev/null; then
+  pkill -x "qs"
+  exit 0
+fi
+
 qs_config="$HOME/dotfiles/.config/quickshell/"
 log_file="/tmp/quickshell-restart.log"
 lock_dir="/tmp/quickshell-restart.lock"

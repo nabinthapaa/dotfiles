@@ -22,10 +22,10 @@ while true; do
 
   socat -U - UNIX-CONNECT:"$socket_path" | while IFS= read -r event; do
     case "$event" in
-      monitoradded*|monitorremoved*)
-        printf '%s\n' "event: $event" >>"$log_file"
-        "$restart_script" 1.0
-        ;;
+    monitoradded* | monitorremoved*)
+      printf '%s\n' "event: $event" >>"$log_file"
+      "$restart_script" 1.0
+      ;;
     esac
   done
 
