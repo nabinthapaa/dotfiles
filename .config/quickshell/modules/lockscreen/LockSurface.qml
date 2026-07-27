@@ -62,8 +62,8 @@ WlSessionLockSurface {
       width: Math.min(surface.width - 64, 520)
       text: Qt.formatTime(surface.controller.currentTime, "HH:mm")
       color: theme.foreground
-      font.pixelSize: Math.min(96, surface.width * 0.12)
-      font.weight: Font.Light
+      font.pixelSize: Math.min(120, surface.width * 0.15)
+      font.weight: Font.Bold
       horizontalAlignment: Text.AlignHCenter
     }
 

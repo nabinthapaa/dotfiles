@@ -45,8 +45,8 @@ Scope {
       anchors.right: valueText.left
       anchors.rightMargin: 10
       anchors.verticalCenter: parent.verticalCenter
-      height: 8
-      radius: 999
+      height: 12
+      radius: 6
       color: theme.surfaceHigh
 
       Rectangle {
@@ -54,6 +54,10 @@ Scope {
         height: parent.height
         radius: parent.radius
         color: fillColor
+
+        Behavior on width {
+          NumberAnimation { duration: 400; easing.type: Easing.OutQuint }
+        }
       }
     }
 
@@ -76,10 +80,10 @@ Scope {
     property string subtitle: ""
     default property alias content: body.data
 
-    radius: theme.radiusLarge
-    color: theme.surface
+    radius: 16
+    color: Qt.rgba(theme.surface.r, theme.surface.g, theme.surface.b, 0.6)
     border.width: 1
-    border.color: theme.border
+    border.color: Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
     clip: true
 
     Column {
@@ -126,9 +130,13 @@ Scope {
     signal killRequested()
 
     width: parent ? parent.width : 0
-    height: 42
-    radius: theme.radius
+    height: 44
+    radius: theme.radiusLarge
     color: selected ? theme.accentContainer : rowArea.containsMouse ? theme.surfaceHover : "transparent"
+
+    Behavior on color {
+      ColorAnimation { duration: 150 }
+    }
 
     Row {
       anchors.fill: parent
@@ -194,11 +202,14 @@ Scope {
         id: killButton
         anchors.verticalCenter: parent.verticalCenter
         width: 54
-        height: 26
-        radius: theme.radius
+        height: 28
+        radius: theme.radiusLarge
         color: killArea.containsMouse ? theme.urgent : theme.surfaceHigh
         border.width: 1
         border.color: killArea.containsMouse ? theme.urgent : theme.border
+
+        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on border.color { ColorAnimation { duration: 150 } }
 
         Text {
           anchors.centerIn: parent
@@ -485,24 +496,24 @@ Scope {
           anchors.centerIn: parent
           width: Math.min(parent.width - 64, 1060)
           height: Math.min(parent.height - 80, 660)
-          radius: theme.radiusLarge
-          color: theme.panel
+          radius: 24
+          color: Qt.rgba(theme.panel.r, theme.panel.g, theme.panel.b, 0.88)
           border.width: 1
-          border.color: theme.border
+          border.color: Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.5)
           opacity: menu.open ? 1 : 0
-          scale: menu.open ? 1 : 0.97
+          scale: menu.open ? 1 : 0.93
           transformOrigin: Item.Center
 
           Behavior on scale {
             NumberAnimation {
-              duration: 150
-              easing.type: Easing.OutCubic
+              duration: 350
+              easing.type: Easing.OutExpo
             }
           }
 
           Behavior on opacity {
             NumberAnimation {
-              duration: 120
+              duration: 250
               easing.type: Easing.OutCubic
             }
           }
@@ -513,8 +524,8 @@ Scope {
 
           Column {
             anchors.fill: parent
-            anchors.margins: 14
-            spacing: 12
+            anchors.margins: 24
+            spacing: 16
 
             Row {
               width: parent.width
@@ -522,16 +533,16 @@ Scope {
               spacing: 12
 
               Rectangle {
-                width: 40
-                height: 40
-                radius: 999
+                width: 54
+                height: 54
+                radius: 27
                 color: theme.accentContainer
 
                 Text {
                   anchors.centerIn: parent
                   text: "󰍛"
                   color: theme.accentContainerForeground
-                  font.pixelSize: 18
+                  font.pixelSize: 24
                 }
               }
 
@@ -545,8 +556,8 @@ Scope {
                   text: "System Monitor"
                   color: theme.foreground
                   elide: Text.ElideRight
-                  font.pixelSize: 16
-                  font.weight: Font.DemiBold
+                  font.pixelSize: 22
+                  font.weight: Font.Bold
                 }
 
                 Text {

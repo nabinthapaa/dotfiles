@@ -27,10 +27,10 @@ Item {
     id: field
 
     width: parent.width
-    height: 54
-    radius: 18
-    color: theme.surface
-    border.width: 1
+    height: 56
+    radius: 28
+    color: input.activeFocus ? theme.surfaceHover : theme.surface
+    border.width: input.activeFocus ? 2 : 1
     border.color: root.error ? theme.urgent : input.activeFocus ? theme.accent : theme.border
 
     Behavior on border.color {
@@ -75,12 +75,12 @@ Item {
     Rectangle {
       id: revealButton
 
-      width: 42
-      height: 42
+      width: 44
+      height: 44
       anchors.right: parent.right
       anchors.rightMargin: 6
       anchors.verticalCenter: parent.verticalCenter
-      radius: 16
+      radius: 22
       color: revealArea.containsMouse ? theme.surfaceHover : "transparent"
 
       Text {

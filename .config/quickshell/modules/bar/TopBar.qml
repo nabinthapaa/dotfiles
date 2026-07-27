@@ -21,11 +21,31 @@ Scope {
 
       screen: modelData
       property alias isControlPanelOpen: controlPanel.open
+      property alias isWifiOpen: connectivityBtns.wifiPopupOpen
+      property alias isBtOpen: connectivityBtns.bluetoothPopupOpen
+      property bool isAnyPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen
 
-      implicitHeight: Math.max(theme.barHeight, rightIsland.implicitHeight + 8)
+      implicitHeight: screen.height
       exclusiveZone: theme.barHeight
 
       color: "transparent"
+
+      mask: Region {
+        Region { item: leftIsland }
+        Region { item: centerIsland }
+        Region { item: rightIsland }
+        Region { item: notificationsIsland }
+      }
+
+      HyprlandFocusGrab {
+        active: bar.isAnyPanelOpen
+        windows: [ bar ]
+        onCleared: {
+          bar.isControlPanelOpen = false;
+          bar.isWifiOpen = false;
+          bar.isBtOpen = false;
+        }
+      }
 
       anchors {
         top: true
@@ -45,7 +65,9 @@ Scope {
 
       Item {
         anchors.fill: parent
+
         BarIsland {
+          id: leftIsland
           anchors.left: parent.left
           anchors.leftMargin: 8
           anchors.top: parent.top
@@ -65,6 +87,7 @@ Scope {
         }
 
         BarIsland {
+          id: centerIsland
           anchors.horizontalCenter: parent.horizontalCenter
           anchors.top: parent.top
           anchors.topMargin: (theme.barHeight - theme.islandHeight) / 2
@@ -149,10 +172,17 @@ Scope {
           anchors.top: parent.top
           anchors.topMargin: (theme.barHeight - theme.islandHeight) / 2
           
-          implicitWidth: controlPanel.open ? 380 : rightRow.implicitWidth + theme.islandPaddingH * 2
-          implicitHeight: controlPanel.open ? controlPanel.implicitHeight : theme.islandHeight
+          implicitWidth: bar.isControlPanelOpen ? 380 :
+                         bar.isWifiOpen ? 336 :
+                         bar.isBtOpen ? 320 :
+                         rightRow.implicitWidth + theme.islandPaddingH * 2
+          
+          implicitHeight: bar.isControlPanelOpen ? controlPanel.implicitHeight :
+                          bar.isWifiOpen ? 384 :
+                          bar.isBtOpen ? 340 :
+                          theme.islandHeight
 
-          customRadius: controlPanel.open ? theme.radiusLarge : theme.radiusPill
+          customRadius: bar.isAnyPanelOpen ? theme.radiusLarge : theme.radiusPill
           Behavior on customRadius { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
           Behavior on implicitWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
           Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
@@ -162,15 +192,17 @@ Scope {
 
             Row {
               id: rightRow
-              anchors.centerIn: parent
+              anchors.horizontalCenter: parent.horizontalCenter
+              anchors.top: parent.top
+              anchors.topMargin: (theme.islandHeight - implicitHeight) / 2
               spacing: theme.gap
-              opacity: controlPanel.open ? 0 : 1
-              scale: controlPanel.open ? 0.9 : 1
+              opacity: bar.isAnyPanelOpen ? 0 : 1
+              scale: bar.isAnyPanelOpen ? 0.9 : 1
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
 
-              ConnectivityButtons { parentWindow: bar; anchors.verticalCenter: parent.verticalCenter }
+              ConnectivityButtons { id: connectivityBtns; parentWindow: bar; island: rightIsland; anchors.verticalCenter: parent.verticalCenter }
               BatteryIndicator { anchors.verticalCenter: parent.verticalCenter }
               Tray { parentWindow: bar; anchors.verticalCenter: parent.verticalCenter }
               ClipboardLauncher { id: clipboardLauncher; parentWindow: bar; anchors.verticalCenter: parent.verticalCenter }
@@ -180,7 +212,8 @@ Scope {
 
             ControlPanel {
               id: controlPanel
-              anchors.centerIn: parent
+              anchors.horizontalCenter: parent.horizontalCenter
+              anchors.top: parent.top
               panelScreen: bar.screen
               notificationServer: root.notificationServer
               notificationCenter: root.notificationCenter
@@ -194,20 +227,36 @@ Scope {
             }
           }
         }
-      }
 
-      PopupWindow {
-        parentWindow: bar
-        relativeX: 0
-        relativeY: 0
-        width: bar.screen.width
-        height: bar.screen.height
-        visible: controlPanel.open
-        color: "#01000000"
-        
-        MouseArea {
-          anchors.fill: parent
-          onClicked: controlPanel.open = false
+        BarIsland {
+          id: notificationsIsland
+          anchors.right: parent.right
+          anchors.rightMargin: 8
+          anchors.top: rightIsland.bottom
+          anchors.topMargin: theme.gap
+          
+          implicitWidth: rightIsland.width
+          implicitHeight: bar.isControlPanelOpen ? 360 : 0
+          customRadius: theme.radiusLarge
+          
+          opacity: bar.isControlPanelOpen ? 1 : 0
+          scale: bar.isControlPanelOpen ? 1 : 0.95
+          visible: opacity > 0
+          
+          Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+          Behavior on opacity { NumberAnimation { duration: 150 } }
+          Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+          
+          Item {
+            anchors.fill: parent
+            anchors.margins: 16
+            
+            NotificationPanel {
+              anchors.fill: parent
+              notificationServer: root.notificationServer
+              notificationCenter: root.notificationCenter
+            }
+          }
         }
       }
     }

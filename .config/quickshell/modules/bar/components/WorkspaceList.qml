@@ -117,7 +117,7 @@ Row {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: Hyprland.dispatch("workspace", String(wsBtn.wsId))
+        onClicked: modelData.activate()
       }
     }
   }

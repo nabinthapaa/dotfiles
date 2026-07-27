@@ -8,15 +8,23 @@ Scope {
   id: root
 
   property alias server: notificationServer
-  property var toastNotifications: []
+  ListModel { id: toastModel }
   property bool dndEnabled: false
 
   function pushToast(notification) {
-    toastNotifications = [notification].concat(toastNotifications).slice(0, 4);
+    toastModel.insert(0, { "modelData": notification });
+    if (toastModel.count > 4) {
+      toastModel.remove(4, toastModel.count - 4);
+    }
   }
 
   function removeToast(notification) {
-    toastNotifications = toastNotifications.filter(item => item !== notification);
+    for (let i = 0; i < toastModel.count; i++) {
+      if (toastModel.get(i).modelData === notification) {
+        toastModel.remove(i, 1);
+        break;
+      }
+    }
   }
 
   function notificationIconSource(notification) {
@@ -83,11 +91,15 @@ Scope {
 
       screen: modelData
       implicitWidth: Math.min(theme.panelWidth, Math.max(260, modelData.width - theme.islandPaddingH * 2))
-      implicitHeight: toastColumn.height
+      implicitHeight: modelData.height
       color: "transparent"
-      visible: root.toastNotifications.length > 0
+      visible: toastModel.count > 0
       aboveWindows: true
       exclusionMode: ExclusionMode.Ignore
+
+      mask: Region {
+        item: toastColumn
+      }
 
       anchors {
         top: true
@@ -99,26 +111,41 @@ Scope {
         right: theme.islandPaddingH
       }
 
-      Column {
+      ListView {
         id: toastColumn
 
         width: parent.width
+        height: contentHeight
         spacing: theme.gap
+        interactive: false
+        model: toastModel
 
-        Repeater {
-          model: root.toastNotifications
+        add: Transition {
+          NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
+          NumberAnimation { property: "scale"; from: 0.8; to: 1; duration: 350; easing.type: Easing.OutBack }
+        }
 
-          delegate: Rectangle {
-            id: toast
+        remove: Transition {
+          ParallelAnimation {
+            NumberAnimation { property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { property: "x"; to: 200; duration: 250; easing.type: Easing.InCubic }
+          }
+        }
 
-            required property var modelData
+        displaced: Transition {
+          NumberAnimation { properties: "y"; duration: 250; easing.type: Easing.OutCubic }
+        }
+        delegate: Rectangle {
+          id: toast
 
-            width: parent.width
-            height: Math.max(74, toastContent.height + 24)
-            radius: theme.radiusLarge
-            color: theme.surface
-            border.width: 1
-            border.color: theme.border
+          required property var modelData
+
+          width: ListView.view.width
+          height: Math.max(74, toastContent.height + 32)
+          radius: theme.radiusLarge
+          color: Qt.rgba(theme.surfaceHigh.r, theme.surfaceHigh.g, theme.surfaceHigh.b, 0.85)
+          border.width: 1
+          border.color: Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.5)
 
             Timer {
               interval: Math.max(3500, toast.modelData.expireTimeout > 0 ? toast.modelData.expireTimeout * 1000 : 5000)
@@ -131,11 +158,11 @@ Scope {
               id: appIcon
 
               anchors.left: parent.left
-              anchors.leftMargin: 12
+              anchors.leftMargin: 14
               anchors.top: parent.top
-              anchors.topMargin: 14
-              width: 24
-              height: 24
+              anchors.topMargin: 16
+              width: 32
+              height: 32
               source: root.notificationIconSource(toast.modelData)
               sourceSize.width: width
               sourceSize.height: height
@@ -147,12 +174,12 @@ Scope {
               id: toastContent
 
               anchors.left: parent.left
-              anchors.leftMargin: appIcon.visible ? 48 : 12
+              anchors.leftMargin: appIcon.visible ? 58 : 16
               anchors.right: dismissButton.left
-              anchors.rightMargin: 8
+              anchors.rightMargin: 12
               anchors.top: parent.top
-              anchors.topMargin: 12
-              spacing: 4
+              anchors.topMargin: 16
+              spacing: 6
 
               Text {
                 width: parent.width
@@ -160,8 +187,8 @@ Scope {
                 color: theme.foreground
                 textFormat: Text.PlainText
                 elide: Text.ElideRight
-                font.pixelSize: 13
-                font.weight: Font.DemiBold
+                font.pixelSize: 14
+                font.weight: Font.Bold
               }
 
               Text {
@@ -205,8 +232,8 @@ Scope {
                       color: theme.foreground
                       elide: Text.ElideRight
                       horizontalAlignment: Text.AlignHCenter
-                      font.pixelSize: 11
-                      font.weight: Font.Medium
+                      font.pixelSize: 12
+                      font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -239,10 +266,9 @@ Scope {
 
               Text {
                 anchors.centerIn: parent
-                text: "x"
+                text: "󰅖"
                 color: theme.muted
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
+                font.pixelSize: 16
               }
 
               MouseArea {
@@ -263,7 +289,6 @@ Scope {
             }
           }
         }
-      }
     }
   }
 }

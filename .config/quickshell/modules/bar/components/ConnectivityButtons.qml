@@ -8,6 +8,7 @@ Row {
   id: root
 
   required property var parentWindow
+  required property var island
 
   property bool wifiPopupOpen: false
   property bool bluetoothPopupOpen: false
@@ -310,17 +311,14 @@ Row {
     }
   }
 
-  PopupWindow {
+  Item {
     id: wifiPopup
-
-    anchor.window: root.parentWindow
-    anchor.rect.x: Math.max(theme.islandPaddingH, Math.min(root.parentWindow.width - width - theme.islandPaddingH, wifiButton.mapToItem(null, 0, 0).x + wifiButton.width - width))
-    anchor.rect.y: theme.barHeight + 6
-    implicitWidth: 336
-    implicitHeight: 384
+    parent: root.island
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    width: 336
+    height: 384
     visible: root.wifiPopupOpen
-    grabFocus: true
-    color: "transparent"
 
     onVisibleChanged: {
       if (!visible) {
@@ -359,110 +357,132 @@ Row {
         anchors.margins: 12
         spacing: 10
 
-        Row {
+        // Header Card
+        Rectangle {
           width: parent.width
-          height: 30
-          spacing: 10
-
-          Column {
-            width: parent.width - wifiHeaderActions.width - parent.spacing
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
-
-            Text {
-              width: parent.width
-              text: "Wi-Fi"
-              color: theme.foreground
-              elide: Text.ElideRight
-              font.pixelSize: 14
-              font.weight: Font.DemiBold
-            }
-
-            Text {
-              width: parent.width
-              text: Networking.wifiEnabled ? root.wifiStatusText() : "Disabled"
-              color: theme.muted
-              elide: Text.ElideRight
-              font.pixelSize: 11
-            }
-          }
+          height: 64
+          radius: theme.radiusLarge
+          color: theme.surfaceHigh
+          border.width: 1
+          border.color: theme.border
 
           Row {
-            id: wifiHeaderActions
-
-            width: wifiToggle.width + scanButton.width + spacing
-            height: 30
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
 
             Rectangle {
-              id: scanButton
-
-              width: Networking.wifiEnabled ? 32 : 0
-              height: 30
-              anchors.verticalCenter: parent.verticalCenter
-              radius: theme.radius
-              color: scanArea.containsMouse ? theme.surfaceHover : theme.surface
-              visible: Networking.wifiEnabled
-              clip: true
-
+              width: 40
+              height: 40
+              radius: theme.radiusLarge
+              color: Networking.wifiEnabled ? theme.accentContainer : theme.surfaceHover
+              
               Text {
                 anchors.centerIn: parent
-                text: "󰑓"
-                color: scanArea.containsMouse ? theme.foreground : theme.muted
-                font.pixelSize: 15
-              }
-
-              MouseArea {
-                id: scanArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.scanWifi()
+                text: "󰖩"
+                color: Networking.wifiEnabled ? theme.accentContainerForeground : theme.muted
+                font.pixelSize: 20
               }
             }
 
-            Rectangle {
-              id: wifiToggle
-
-              width: 38
-              height: 24
+            Column {
+              width: parent.width - 40 - 12 - wifiHeaderActions.width - parent.spacing
               anchors.verticalCenter: parent.verticalCenter
-              radius: 12
-              color: Networking.wifiEnabled ? theme.accentContainer : theme.surfaceHigh
+              spacing: 2
+
+              Text {
+                width: parent.width
+                text: "Wi-Fi"
+                color: theme.foreground
+                elide: Text.ElideRight
+                font.pixelSize: 15
+                font.weight: Font.Bold
+              }
+
+              Text {
+                width: parent.width
+                text: Networking.wifiEnabled ? root.wifiStatusText() : "Disabled"
+                color: theme.muted
+                elide: Text.ElideRight
+                font.pixelSize: 12
+              }
+            }
+
+            Row {
+              id: wifiHeaderActions
+              width: wifiToggle.width + scanButton.width + spacing
+              height: 40
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: 10
 
               Rectangle {
-                width: 18
-                height: 18
+                id: scanButton
+                width: Networking.wifiEnabled ? 36 : 0
+                height: 36
                 anchors.verticalCenter: parent.verticalCenter
-                x: Networking.wifiEnabled ? parent.width - width - 3 : 3
-                radius: 9
-                color: Networking.wifiEnabled ? theme.accentContainerForeground : theme.muted
+                radius: 18
+                color: scanArea.containsMouse ? theme.surfaceHover : "transparent"
+                visible: Networking.wifiEnabled
+                clip: true
 
-                Behavior on x {
-                  NumberAnimation {
-                    duration: 120
-                    easing.type: Easing.OutCubic
+                Text {
+                  anchors.centerIn: parent
+                  text: "󰑓"
+                  color: scanArea.containsMouse ? theme.foreground : theme.muted
+                  font.pixelSize: 18
+                  RotationAnimation on rotation {
+                    running: scanArea.containsMouse
+                    from: 0
+                    to: 360
+                    duration: 1000
+                    loops: Animation.Infinite
+                  }
+                }
+
+                MouseArea {
+                  id: scanArea
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: root.scanWifi()
+                }
+              }
+
+              Rectangle {
+                id: wifiToggle
+                width: 46
+                height: 26
+                anchors.verticalCenter: parent.verticalCenter
+                radius: 13
+                color: Networking.wifiEnabled ? theme.accent : theme.surfaceHover
+
+                Rectangle {
+                  width: 20
+                  height: 20
+                  anchors.verticalCenter: parent.verticalCenter
+                  x: Networking.wifiEnabled ? parent.width - width - 3 : 3
+                  radius: 10
+                  color: Networking.wifiEnabled ? theme.accentForeground : theme.muted
+
+                  Behavior on x {
+                    NumberAnimation {
+                      duration: 150
+                      easing.type: Easing.OutBack
+                    }
+                  }
+                }
+
+                MouseArea {
+                  anchors.fill: parent
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: {
+                    Networking.wifiEnabled = !Networking.wifiEnabled;
+                    root.updateScanner();
                   }
                 }
               }
-
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                  Networking.wifiEnabled = !Networking.wifiEnabled;
-                  root.updateScanner();
-                }
-              }
             }
           }
-        }
-
-        Rectangle {
-          width: parent.width
-          height: 1
-          color: theme.border
         }
 
         Item {
@@ -486,10 +506,10 @@ Row {
             clip: true
             visible: Networking.wifiEnabled && root.activeWifiDevice && root.wifiNetworkCount > 0
 
-            Column {
+              Column {
               id: networkColumn
               width: parent.width
-              spacing: 6
+              spacing: 8
 
               Repeater {
                 model: root.wifiNetworks
@@ -500,11 +520,11 @@ Row {
                   required property var modelData
 
                   width: networkColumn.width
-                  height: 54
-                  radius: theme.radius
+                  height: 56
+                  radius: theme.radiusLarge
                   color: modelData.connected ? theme.accentContainer : networkArea.containsMouse ? theme.surfaceHover : theme.surface
-                  border.width: modelData.stateChanging ? 1 : 0
-                  border.color: theme.outline
+                  border.width: 1
+                  border.color: modelData.connected ? theme.accent : theme.border
 
                   Connections {
                     target: networkRow.modelData
@@ -733,17 +753,14 @@ Row {
     }
   }
 
-  PopupWindow {
+  Item {
     id: bluetoothPopup
-
-    anchor.window: root.parentWindow
-    anchor.rect.x: Math.max(theme.islandPaddingH, Math.min(root.parentWindow.width - width - theme.islandPaddingH, bluetoothButton.mapToItem(null, 0, 0).x + bluetoothButton.width - width))
-    anchor.rect.y: theme.barHeight + 6
-    implicitWidth: 320
-    implicitHeight: 340
+    parent: root.island
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    width: 320
+    height: 340
     visible: root.bluetoothPopupOpen
-    grabFocus: true
-    color: "transparent"
 
     onVisibleChanged: {
       if (!visible) {
@@ -780,70 +797,85 @@ Row {
         anchors.margins: 12
         spacing: 10
 
-        Row {
+        // Header Card
+        Rectangle {
           width: parent.width
-          height: 30
+          height: 64
+          radius: theme.radiusLarge
+          color: theme.surfaceHigh
+          border.width: 1
+          border.color: theme.border
 
-          Column {
-            width: parent.width - 44
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
-
-            Text {
-              width: parent.width
-              text: "Bluetooth"
-              color: theme.foreground
-              elide: Text.ElideRight
-              font.pixelSize: 14
-              font.weight: Font.DemiBold
-            }
-
-            Text {
-              width: parent.width
-              text: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? root.bluetoothStatusText() : root.bluetoothAdapter ? "Disabled" : "No adapter"
-              color: theme.muted
-              elide: Text.ElideRight
-              font.pixelSize: 11
-            }
-          }
-
-          Rectangle {
-            width: 38
-            height: 24
-            anchors.verticalCenter: parent.verticalCenter
-            radius: 12
-            color: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? theme.accentContainer : theme.surfaceHigh
-            opacity: root.bluetoothAdapter ? 1 : 0.5
+          Row {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
 
             Rectangle {
-              width: 18
-              height: 18
-              anchors.verticalCenter: parent.verticalCenter
-              x: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? parent.width - width - 3 : 3
-              radius: 9
-              color: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? theme.accentContainerForeground : theme.muted
-
-              Behavior on x {
-                NumberAnimation {
-                  duration: 120
-                  easing.type: Easing.OutCubic
-                }
+              width: 40
+              height: 40
+              radius: theme.radiusLarge
+              color: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? theme.accentContainer : theme.surfaceHover
+              
+              Text {
+                anchors.centerIn: parent
+                text: "󰂯"
+                color: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? theme.accentContainerForeground : theme.muted
+                font.pixelSize: 20
               }
             }
 
-            MouseArea {
-              anchors.fill: parent
-              enabled: root.bluetoothAdapter !== null
-              cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-              onClicked: root.bluetoothAdapter.enabled = !root.bluetoothAdapter.enabled
+            Column {
+              width: parent.width - 40 - 12 - btToggle.width - parent.spacing
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: 2
+
+              Text {
+                width: parent.width
+                text: "Bluetooth"
+                color: theme.foreground
+                elide: Text.ElideRight
+                font.pixelSize: 15
+                font.weight: Font.Bold
+              }
+
+              Text {
+                width: parent.width
+                text: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? root.bluetoothStatusText() : root.bluetoothAdapter ? "Disabled" : "No adapter"
+                color: theme.muted
+                elide: Text.ElideRight
+                font.pixelSize: 12
+              }
+            }
+
+            Rectangle {
+              id: btToggle
+              width: 46
+              height: 26
+              anchors.verticalCenter: parent.verticalCenter
+              radius: 13
+              color: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? theme.accent : theme.surfaceHover
+              opacity: root.bluetoothAdapter ? 1 : 0.5
+
+              Rectangle {
+                width: 20
+                height: 20
+                anchors.verticalCenter: parent.verticalCenter
+                x: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? parent.width - width - 3 : 3
+                radius: 10
+                color: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? theme.accentForeground : theme.muted
+
+                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                enabled: root.bluetoothAdapter !== null
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.bluetoothAdapter.enabled = !root.bluetoothAdapter.enabled
+              }
             }
           }
-        }
-
-        Rectangle {
-          width: parent.width
-          height: 1
-          color: theme.border
         }
 
         Item {
@@ -870,7 +902,7 @@ Row {
             Column {
               id: bluetoothDeviceColumn
               width: parent.width
-              spacing: 6
+              spacing: 8
 
               Repeater {
                 model: root.bluetoothDevices
@@ -881,9 +913,11 @@ Row {
                   required property var modelData
 
                   width: bluetoothDeviceColumn.width
-                  height: 54
-                  radius: theme.radius
+                  height: 56
+                  radius: theme.radiusLarge
                   color: modelData.connected ? theme.accentContainer : bluetoothDeviceArea.containsMouse ? theme.surfaceHover : theme.surface
+                  border.width: 1
+                  border.color: modelData.connected ? theme.accent : theme.border
 
                   Row {
                     anchors.fill: parent

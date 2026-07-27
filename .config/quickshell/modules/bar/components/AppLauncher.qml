@@ -235,7 +235,13 @@ Item {
 
                 Keys.onEscapePressed: root.open = false
                 Keys.onPressed: event => {
-                  if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
+                  if (event.key === Qt.Key_Down) {
+                    root.cycleSelection(4);
+                    event.accepted = true;
+                  } else if (event.key === Qt.Key_Up) {
+                    root.cycleSelection(-4);
+                    event.accepted = true;
+                  } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
                     root.cycleSelection(1);
                     event.accepted = true;
                   } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_P) {
@@ -270,18 +276,19 @@ Item {
             visible: root.filteredApplications.length === 0
           }
 
-          ListView {
+          GridView {
             id: appList
 
             anchors.fill: parent
             clip: true
             visible: root.filteredApplications.length > 0
             model: root.filteredApplications
-            spacing: 6
+            cellWidth: width / 4
+            cellHeight: 110
             boundsBehavior: Flickable.StopAtBounds
             currentIndex: root.selectedIndex
 
-            delegate: Rectangle {
+            delegate: Item {
               id: appRow
 
               required property var modelData
@@ -289,65 +296,85 @@ Item {
 
               readonly property bool selected: root.selectedIndex === index
 
-              width: appList.width
-              height: 56
-              radius: theme.radiusLarge
-              color: selected
-                ? theme.accentContainer
-                : appArea.containsMouse ? theme.surfaceHover : theme.surface
+              width: appList.cellWidth
+              height: appList.cellHeight
 
-              Rectangle {
-                id: appIcon
-
-                anchors.left: parent.left
-                anchors.leftMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                width: 36
-                height: 36
-                radius: height / 2
-                color: appRow.selected ? theme.accent : theme.surfaceHigh
-
-                Image {
-                  anchors.centerIn: parent
-                  width: 22
-                  height: 22
-                  source: root.iconSource(appRow.modelData)
-                  sourceSize.width: width
-                  sourceSize.height: height
-                  fillMode: Image.PreserveAspectFit
-                  visible: source.toString().length > 0
-                }
-
-                Text {
-                  anchors.centerIn: parent
-                  text: "󰣆"
-                  color: appRow.selected ? theme.accentForeground : theme.muted
-                  font.pixelSize: 18
-                  visible: root.iconSource(appRow.modelData).length === 0
-                }
-              }
-
-              Text {
-                anchors.left: appIcon.right
-                anchors.leftMargin: 12
-                anchors.right: parent.right
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                text: appRow.modelData.name
-                color: appRow.selected ? theme.accentContainerForeground : theme.foreground
-                elide: Text.ElideRight
-                maximumLineCount: 1
-                font.pixelSize: 13
-                font.weight: appRow.selected ? Font.DemiBold : Font.Medium
-              }
-
-              MouseArea {
-                id: appArea
+              Item {
                 anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onEntered: root.selectedIndex = index
-                onClicked: root.launch(appRow.modelData)
+                opacity: root.open ? 1 : 0
+                y: root.open ? 0 : 20
+
+                Behavior on opacity {
+                  SequentialAnimation {
+                    PauseAnimation { duration: root.open ? Math.min(index * 15, 300) : 0 }
+                    NumberAnimation { duration: 150 }
+                  }
+                }
+
+                Behavior on y {
+                  SequentialAnimation {
+                    PauseAnimation { duration: root.open ? Math.min(index * 15, 300) : 0 }
+                    NumberAnimation {
+                      duration: 350
+                      easing.type: Easing.OutExpo
+                    }
+                  }
+                }
+
+                Rectangle {
+                  anchors.centerIn: parent
+                  width: parent.width - 12
+                  height: parent.height - 12
+                  radius: theme.radiusLarge
+                  color: appRow.selected
+                    ? theme.accentContainer
+                    : appArea.containsMouse ? theme.surfaceHover : "transparent"
+
+                  Column {
+                    anchors.centerIn: parent
+                    spacing: 12
+
+                    Image {
+                      anchors.horizontalCenter: parent.horizontalCenter
+                      width: 52
+                      height: 52
+                      source: root.iconSource(appRow.modelData)
+                      sourceSize.width: width
+                      sourceSize.height: height
+                      fillMode: Image.PreserveAspectFit
+                      visible: source.toString().length > 0
+                    }
+
+                    Text {
+                      anchors.horizontalCenter: parent.horizontalCenter
+                      text: "󰣆"
+                      color: appRow.selected ? theme.accentContainerForeground : theme.muted
+                      font.pixelSize: 32
+                      visible: root.iconSource(appRow.modelData).length === 0
+                    }
+
+                    Text {
+                      anchors.horizontalCenter: parent.horizontalCenter
+                      width: parent.parent.width - 16
+                      text: appRow.modelData.name
+                      color: appRow.selected ? theme.accentContainerForeground : theme.foreground
+                      elide: Text.ElideRight
+                      horizontalAlignment: Text.AlignHCenter
+                      maximumLineCount: 1
+                      font.pixelSize: 12
+                      font.weight: appRow.selected ? Font.DemiBold : Font.Medium
+                    }
+                  }
+
+                  MouseArea {
+                    id: appArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: root.selectedIndex = index
+                    onClicked: root.launch(appRow.modelData)
+                  }
+                }
               }
             }
           }

@@ -44,8 +44,9 @@ Item {
 
   ParallelAnimation {
     id: appear
-    NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
-    NumberAnimation { target: card; property: "scale"; from: 0.965; to: 1; duration: 180; easing.type: Easing.OutCubic }
+    NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
+    NumberAnimation { target: card; property: "scale"; from: 0.9; to: 1; duration: 350; easing.type: Easing.OutBack }
+    NumberAnimation { target: card; property: "anchors.verticalCenterOffset"; from: 40; to: 0; duration: 350; easing.type: Easing.OutBack }
   }
 
   Rectangle {
@@ -73,8 +74,8 @@ Item {
         width: parent.width
         text: Qt.formatTime(root.controller.currentTime, "HH:mm")
         color: theme.foreground
-        font.pixelSize: Math.min(84, root.width * 0.17)
-        font.weight: Font.Light
+        font.pixelSize: Math.min(104, root.width * 0.22)
+        font.weight: Font.Bold
         horizontalAlignment: Text.AlignHCenter
       }
 
@@ -94,13 +95,13 @@ Item {
         Rectangle {
           id: avatar
 
-          width: 76
-          height: 76
-          radius: 38
+          width: 96
+          height: 96
+          radius: 48
           anchors.horizontalCenter: parent.horizontalCenter
           color: theme.accentContainer
-          border.width: 1
-          border.color: theme.border
+          border.width: 3
+          border.color: theme.accent
           clip: true
 
           Image {

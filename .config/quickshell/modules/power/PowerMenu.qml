@@ -95,6 +95,12 @@ Scope {
 
         anchors.fill: parent
         focus: menu.open
+        opacity: menu.open ? 1 : 0
+        scale: menu.open ? 1 : 0.95
+
+        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+
         Keys.onEscapePressed: menu.open = false
         Keys.onReturnPressed: menu.runSelected()
         Keys.onEnterPressed: menu.runSelected()
@@ -150,7 +156,7 @@ Scope {
               readonly property bool selected: menu.selectedIndex === index
 
               width: (actionGrid.width - actionGrid.columnSpacing * (actionGrid.columns - 1)) / actionGrid.columns
-              height: 138
+              height: 160
               radius: theme.radiusLarge
               color: selected ? theme.accentContainer : actionArea.containsMouse ? theme.surfaceHover : theme.surfaceHigh
               border.width: selected ? 2 : 1
@@ -166,7 +172,7 @@ Scope {
                   text: actionButton.modelData.icon
                   color: actionButton.selected ? theme.accentContainerForeground : theme.foreground
                   horizontalAlignment: Text.AlignHCenter
-                  font.pixelSize: 28
+                  font.pixelSize: 48
                 }
 
                 Text {

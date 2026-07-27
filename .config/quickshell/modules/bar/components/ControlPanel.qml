@@ -236,6 +236,46 @@ Item {
 
 
 
+  property string weatherCondition: "Loading..."
+  property string weatherTemp: ""
+  property string weatherFeelsLike: ""
+  property string weatherChance: ""
+  property string weatherAqi: ""
+
+  Process {
+    id: weatherProc
+    command: ["sh", "-c", Quickshell.env("HOME") + "/dotfiles/.config/quickshell/scripts/weather-full.sh || echo 'Unknown|--°C|--°C|--%|-- AQI'"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const parts = text.trim().split("|");
+        if (parts.length >= 5) {
+           root.weatherCondition = parts[0];
+           root.weatherTemp = parts[1].replace("+", "");
+           root.weatherFeelsLike = parts[2].replace("+", "");
+           root.weatherChance = parts[3];
+           root.weatherAqi = parts[4];
+        } else {
+           root.weatherCondition = "Offline";
+           root.weatherTemp = "--°C";
+           root.weatherFeelsLike = "--°C";
+           root.weatherChance = "--%";
+           root.weatherAqi = "--";
+        }
+      }
+    }
+  }
+
+  Timer {
+    interval: 1800000 // 30 mins
+    running: true
+    repeat: true
+    onTriggered: {
+      weatherProc.running = false;
+      weatherProc.running = true;
+    }
+  }
+
   Item {
     id: panel
     anchors.fill: parent
@@ -259,29 +299,67 @@ Item {
       anchors.margins: 14
       spacing: 14
 
-      // Top Row: Clock
+      // Top Row: Weather
       Rectangle {
         width: parent.width
-        height: 52
+        height: 64
         radius: theme.radiusLarge
         color: theme.surfaceHigh
-        
-        Column {
+
+        Row {
           anchors.centerIn: parent
-          SystemClock { id: panelClock; precision: SystemClock.Minutes }
+          spacing: 20
+
           Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(panelClock.date, "HH:mm")
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.weatherCondition
             color: theme.foreground
-            font.pixelSize: 20
-            font.weight: Font.DemiBold
+            font.pixelSize: 32
           }
-          Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(panelClock.date, "dddd, MMMM d")
-            color: theme.muted
-            font.pixelSize: 10
-            font.weight: Font.Medium
+
+          Column {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 2
+
+            Text {
+              text: root.weatherTemp || "..."
+              color: theme.foreground
+              font.pixelSize: 18
+              font.weight: Font.DemiBold
+            }
+
+            Text {
+              text: "Feels like " + root.weatherFeelsLike
+              color: theme.muted
+              font.pixelSize: 11
+              font.weight: Font.Medium
+            }
+          }
+
+          Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: 1
+            height: 28
+            color: Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.6)
+          }
+
+          Column {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 2
+
+            Text {
+              text: "AQI " + root.weatherAqi
+              color: Number(root.weatherAqi) > 100 ? theme.urgent : (Number(root.weatherAqi) > 50 ? theme.warning : theme.accent)
+              font.pixelSize: 12
+              font.weight: Font.DemiBold
+            }
+
+            Text {
+              text: root.weatherChance + " Rain"
+              color: theme.muted
+              font.pixelSize: 11
+              font.weight: Font.Medium
+            }
           }
         }
       }
@@ -574,107 +652,6 @@ Item {
           }
         }
       }
-      // Notifications (Embedded)
-      Item {
-        width: parent.width
-        height: notificationServer.trackedNotifications.values.length > 0 ? Math.min(320, notifColumn.implicitHeight) : 0
-        visible: height > 0
-        clip: true
-        
-        Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-
-        Flickable {
-          anchors.fill: parent
-          contentWidth: width
-          contentHeight: notifColumn.implicitHeight
-          boundsBehavior: Flickable.StopAtBounds
-          clip: true
-          
-          Column {
-            id: notifColumn
-            width: parent.width
-            spacing: 8
-            
-            Repeater {
-              model: notificationServer.trackedNotifications
-              
-              delegate: Rectangle {
-                required property var modelData
-                width: parent.width
-                height: Math.max(64, notifText.implicitHeight + 24)
-                radius: theme.radius
-                color: theme.surfaceHover
-                
-                Image {
-                  id: notifIcon
-                  anchors.left: parent.left
-                  anchors.leftMargin: 12
-                  anchors.top: parent.top
-                  anchors.topMargin: 12
-                  width: 24
-                  height: 24
-                  source: root.notificationIconSource(modelData)
-                  sourceSize.width: width
-                  sourceSize.height: height
-                  visible: String(source).length > 0
-                  fillMode: Image.PreserveAspectFit
-                }
-                
-                Column {
-                  id: notifText
-                  anchors.left: parent.left
-                  anchors.leftMargin: notifIcon.visible ? 46 : 12
-                  anchors.right: dismissBtn.left
-                  anchors.rightMargin: 8
-                  anchors.top: parent.top
-                  anchors.topMargin: 12
-                  spacing: 4
-                  
-                  Text {
-                    width: parent.width
-                    text: modelData.summary || modelData.appName || "Notification"
-                    color: theme.foreground
-                    elide: Text.ElideRight
-                    font.pixelSize: 13
-                    font.weight: Font.DemiBold
-                  }
-                  Text {
-                    width: parent.width
-                    text: modelData.body || ""
-                    visible: text.length > 0
-                    color: theme.muted
-                    wrapMode: Text.WordWrap
-                    maximumLineCount: 2
-                    elide: Text.ElideRight
-                    font.pixelSize: 11
-                    lineHeight: 1.2
-                  }
-                }
-                
-                Text {
-                  id: dismissBtn
-                  anchors.right: parent.right
-                  anchors.rightMargin: 12
-                  anchors.top: parent.top
-                  anchors.topMargin: 12
-                  text: "x"
-                  color: theme.muted
-                  font.pixelSize: 14
-                  font.weight: Font.Bold
-                  MouseArea {
-                    anchors.fill: parent
-                    anchors.margins: -4
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: modelData.dismiss()
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
   }
-
-
 }
