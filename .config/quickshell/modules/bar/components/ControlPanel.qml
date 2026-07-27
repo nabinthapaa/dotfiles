@@ -681,12 +681,12 @@ PanelWindow {
 
               Repeater {
                 model: [
-                  { label: "Lock", icon: "" },
-                  { label: "Exit", icon: "󰍃" },
-                  { label: "Hibernate", icon: "󰒲" },
-                  { label: "Suspend", icon: "󰤄" },
-                  { label: "Reboot", icon: "󰜉" },
-                  { label: "Shutdown", icon: "⏻" }
+                  { key: "lock", label: "Lock", icon: "", command: ["hyprlock"] },
+                  { key: "exit", label: "Exit", icon: "󰍃", command: ["hyprctl", "dispatch", "exit"] },
+                  { key: "hibernate", label: "Hibernate", icon: "󰒲", command: ["systemctl", "hibernate"] },
+                  { key: "suspend", label: "Suspend", icon: "󰤄", command: ["systemctl", "suspend"] },
+                  { key: "reboot", label: "Reboot", icon: "󰜉", command: ["systemctl", "reboot"] },
+                  { key: "shutdown", label: "Shutdown", icon: "⏻", command: ["shutdown", "now"] }
                 ]
 
                 delegate: Rectangle {
@@ -731,7 +731,7 @@ PanelWindow {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: console.log("Power action requested:", modelData.label)
+                    onClicked: powerPage.runAction(modelData.command)
                   }
                 }
               }

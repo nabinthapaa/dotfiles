@@ -1,3 +1,4 @@
+// SidebarButton.qml — Hamburger/menu button that opens the control panel.
 import QtQuick
 import "../../../shared"
 
@@ -10,25 +11,37 @@ Rectangle {
 
   width: theme.controlSize
   height: theme.controlSize
-  radius: theme.radiusLarge
-  color: active ? theme.accentContainer : area.containsMouse ? theme.surfaceHover : theme.surface
+  radius: theme.radiusPill
+  color: active
+    ? theme.accentContainer
+    : area.containsMouse
+      ? theme.surfaceHover
+      : "transparent"
 
-  Theme {
-    id: theme
+  Theme { id: theme }
+
+  Behavior on color {
+    ColorAnimation { duration: 120 }
   }
 
+  // Three-line hamburger icon
   Column {
     anchors.centerIn: parent
-    spacing: 3
+    spacing: 4
 
     Repeater {
       model: 3
 
       Rectangle {
-        width: 13
+        // Middle line is shorter for aesthetic
+        width: index === 1 ? 10 : 14
         height: 2
         radius: 1
         color: root.active ? theme.accentContainerForeground : theme.foreground
+
+        Behavior on color {
+          ColorAnimation { duration: 120 }
+        }
       }
     }
   }

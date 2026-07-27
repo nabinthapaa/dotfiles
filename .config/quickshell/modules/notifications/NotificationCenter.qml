@@ -81,7 +81,7 @@ Scope {
       required property var modelData
 
       screen: modelData
-      implicitWidth: Math.min(theme.panelWidth, Math.max(260, modelData.width - theme.barPadding * 2))
+      implicitWidth: Math.min(theme.panelWidth, Math.max(260, modelData.width - theme.islandPaddingH * 2))
       implicitHeight: toastColumn.height
       color: "transparent"
       visible: root.toastNotifications.length > 0
@@ -94,8 +94,8 @@ Scope {
       }
 
       margins {
-        top: theme.barHeight + theme.barPadding
-        right: theme.barPadding
+        top: theme.barHeight + theme.islandPaddingH
+        right: theme.islandPaddingH
       }
 
       Column {

@@ -62,15 +62,25 @@ contains `shell.qml` as a named config.
 
 ## Current Bar
 
-- Left: numbered Hyprland workspaces `1` through `10`.
-- Center: time on top, date below it.
-- Right: Wi-Fi and Bluetooth status buttons, laptop battery when present,
-  system tray icons, then the sidebar button.
-- Sidebar button opens a full-height right-side control panel overlay.
+Three floating pill islands anchored to a transparent `PanelWindow`:
 
-`TopBar.qml` uses `Variants { model: Quickshell.screens }`, so each connected
-screen gets its own `PanelWindow`. The window is anchored to the top, left, and
-right edges and reserves `Theme.barHeight` pixels using `exclusiveZone`.
+- **Left island**: `AppLauncher` icon → `WorkspaceList` (occupied workspaces only;
+  active = expanded accent pill with number, inactive = compact numbered dot).
+- **Center island**: inline clock — `HH:mm` bold + thin separator + short date muted.
+- **Right island**: Wi-Fi icon → Bluetooth icon → battery (`icon + %`) → tray icons →
+  clipboard toggle button → wallpaper picker icon → sidebar/control-panel toggle.
+
+The `PanelWindow` is fully transparent. Each island is a `BarIsland` (`Rectangle`
+with `radius: theme.radiusLarge`, `color: theme.islandBg`, subtle border) positioned
+with `anchors.left/centerIn/right` inside an `Item` that fills the panel.
+
+`TopBar.qml` uses `Variants { model: Quickshell.screens }`, so each connected screen
+gets its own `PanelWindow`. The window reserves `theme.barHeight` px via `exclusiveZone`.
+
+New bar components:
+
+- `BarIsland.qml` — styled pill rectangle; consumers set `implicitWidth`.
+- `BarIconButton.qml` — compact icon-only button with active state and hover animation.
 
 ## Editing Notes
 

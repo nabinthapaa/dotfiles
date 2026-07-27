@@ -1,3 +1,5 @@
+// WorkspaceList.qml — Occupied workspaces only, with number labels.
+// Active workspace → filled accent pill, inactive → subtle dot with number.
 import Quickshell.Hyprland
 import QtQuick
 import "../../../shared"
@@ -7,70 +9,88 @@ Row {
 
   required property var screen
 
-  spacing: theme.gap / 2
+  spacing: 4
 
-  Theme {
-    id: theme
-  }
+  Theme { id: theme }
 
   readonly property var monitor: Hyprland.monitorFor(screen)
-  readonly property var workspaces: Hyprland.workspaces.values
-    .filter(workspace => workspace && workspace.id > 0 && root.belongsToMonitor(workspace))
-    .sort((a, b) => a.id - b.id)
 
-  function belongsToMonitor(workspace) {
-    if (!root.monitor || !workspace.monitor) {
-      return true;
+  // All positive-id workspaces that belong to this monitor, sorted by id.
+  readonly property var workspaces: {
+    const all = Hyprland.workspaces.values;
+    const result = [];
+    for (let i = 0; i < all.length; i++) {
+      const ws = all[i];
+      if (!ws || ws.id <= 0) continue;
+      if (root.monitor && ws.monitor && ws.monitor !== root.monitor
+          && ws.monitor.name !== root.monitor.name) continue;
+      result.push(ws);
     }
-
-    return workspace.monitor === root.monitor
-      || workspace.monitor.name === root.monitor.name;
+    result.sort((a, b) => a.id - b.id);
+    return result;
   }
 
   Repeater {
     model: root.workspaces
 
     Rectangle {
-      id: button
+      id: wsBtn
 
       required property var modelData
 
-      readonly property int workspaceId: modelData.id
-      readonly property var workspace: modelData
+      readonly property int wsId: modelData.id
       readonly property bool active: root.monitor
         && root.monitor.activeWorkspace
-        && root.monitor.activeWorkspace.id === workspaceId
-      readonly property bool occupied: workspace !== undefined
-      readonly property bool urgent: occupied && workspace.urgent
+        && root.monitor.activeWorkspace.id === wsId
+      readonly property bool urgent: modelData.urgent ?? false
 
-      width: active ? 34 : 24
-      height: theme.controlSize
-      radius: theme.radiusLarge
-      color: urgent ? theme.urgent : active ? theme.accentContainer : hover.containsMouse ? theme.surfaceHover : "transparent"
-      border.width: occupied && !active ? 1 : 0
-      border.color: theme.border
+      // Active: wide labeled pill.  Inactive: small circle with number.
+      width: active ? label.implicitWidth + 16 : 22
+      height: 22
+      radius: theme.radiusPill
+
+      color: urgent
+        ? theme.urgent
+        : active
+          ? theme.accent
+          : hoverArea.containsMouse
+            ? theme.surfaceHigh
+            : theme.surfaceHover
+
+      border.width: active ? 0 : 1
+      border.color: Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.5)
 
       Behavior on width {
-        NumberAnimation {
-          duration: 140
-          easing.type: Easing.OutCubic
-        }
+        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+      }
+
+      Behavior on color {
+        ColorAnimation { duration: 120 }
       }
 
       Text {
+        id: label
         anchors.centerIn: parent
-        text: button.workspaceId
-        color: button.active ? theme.accentContainerForeground : button.urgent ? theme.background : button.occupied ? theme.foreground : theme.muted
-        font.pixelSize: 12
-        font.weight: button.active ? Font.DemiBold : Font.Medium
+        text: wsBtn.wsId
+        font.pixelSize: 11
+        font.weight: wsBtn.active ? Font.Bold : Font.Medium
+        color: wsBtn.urgent
+          ? theme.background
+          : wsBtn.active
+            ? theme.accentForeground
+            : theme.muted
+
+        Behavior on color {
+          ColorAnimation { duration: 120 }
+        }
       }
 
       MouseArea {
-        id: hover
+        id: hoverArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: Hyprland.dispatch("workspace " + button.workspaceId)
+        onClicked: Hyprland.dispatch("workspace", String(wsBtn.wsId))
       }
     }
   }

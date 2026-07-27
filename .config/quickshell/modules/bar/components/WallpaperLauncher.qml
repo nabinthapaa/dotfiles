@@ -17,8 +17,8 @@ Item {
   readonly property var filteredWallpapers: filterWallpapers()
   readonly property var hyprMonitor: Hyprland.monitorFor(root.parentWindow.screen)
   readonly property string ipcTargetName: hyprMonitor ? hyprMonitor.name : root.parentWindow.screen.name
-  readonly property int popupWidth: Math.min(760, root.parentWindow.width - theme.barPadding * 2)
-  readonly property int popupHeight: Math.min(560, root.parentWindow.screen.height - theme.barHeight - theme.barPadding * 2)
+  readonly property int popupWidth: Math.min(760, root.parentWindow.width - theme.islandPaddingH * 2)
+  readonly property int popupHeight: Math.min(560, root.parentWindow.screen.height - theme.barHeight - theme.islandPaddingH * 2)
 
   width: 0
   height: 0

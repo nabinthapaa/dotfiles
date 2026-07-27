@@ -234,42 +234,30 @@ Row {
     }
   }
 
+  // ── Wi-Fi icon button ──────────────────────────────────────────
   Rectangle {
     id: wifiButton
 
-    width: wifiIcon.implicitWidth + wifiLabel.width + wifiButtonContent.spacing
+    width: theme.controlSize
     height: theme.controlSize
-    radius: theme.radiusLarge
-    color: "transparent"
+    radius: theme.radiusPill
+    color: root.wifiPopupOpen
+      ? theme.accentContainer
+      : wifiArea.containsMouse
+        ? theme.surfaceHigh
+        : "transparent"
 
-    Row {
-      id: wifiButtonContent
+    Behavior on color { ColorAnimation { duration: 120 } }
 
-      anchors.fill: parent
-      anchors.leftMargin: 0
-      anchors.rightMargin: 0
-      spacing: 8
-
-      Text {
-        id: wifiIcon
-
-        anchors.verticalCenter: parent.verticalCenter
-        text: Networking.wifiEnabled ? "󰖩" : "󰖪"
-        color: root.wifiPopupOpen || wifiArea.containsMouse ? theme.accent : theme.foreground
-        font.pixelSize: 15
-      }
-
-      Text {
-        id: wifiLabel
-
-        anchors.verticalCenter: parent.verticalCenter
-        width: Math.min(96, implicitWidth)
-        text: root.wifiStatusText()
-        color: root.wifiPopupOpen || wifiArea.containsMouse ? theme.accent : theme.foreground
-        elide: Text.ElideRight
-        font.pixelSize: 12
-        font.weight: Font.Medium
-      }
+    Text {
+      anchors.centerIn: parent
+      text: Networking.wifiEnabled
+        ? (root.connectedWifiName() !== "" ? "󰖩" : "󰖫")
+        : "󰖪"
+      font.pixelSize: 14
+      font.family: "Symbols Nerd Font"
+      color: root.wifiPopupOpen ? theme.accentContainerForeground : theme.foreground
+      Behavior on color { ColorAnimation { duration: 120 } }
     }
 
     MouseArea {
@@ -284,50 +272,30 @@ Row {
     }
   }
 
-  Text {
-    anchors.verticalCenter: parent.verticalCenter
-    text: "|"
-    color: theme.muted
-    font.pixelSize: 13
-    font.weight: Font.Medium
-  }
-
+  // ── Bluetooth icon button ─────────────────────────────────────
   Rectangle {
     id: bluetoothButton
 
-    width: bluetoothIcon.implicitWidth + bluetoothLabel.width + bluetoothButtonContent.spacing
+    width: theme.controlSize
     height: theme.controlSize
-    radius: theme.radiusLarge
-    color: "transparent"
+    radius: theme.radiusPill
+    color: root.bluetoothPopupOpen
+      ? theme.accentContainer
+      : bluetoothArea.containsMouse
+        ? theme.surfaceHigh
+        : "transparent"
 
-    Row {
-      id: bluetoothButtonContent
+    Behavior on color { ColorAnimation { duration: 120 } }
 
-      anchors.fill: parent
-      anchors.leftMargin: 0
-      anchors.rightMargin: 0
-      spacing: 8
-
-      Text {
-        id: bluetoothIcon
-
-        anchors.verticalCenter: parent.verticalCenter
-        text: "󰂯"
-        color: root.bluetoothPopupOpen || bluetoothArea.containsMouse ? theme.accent : theme.foreground
-        font.pixelSize: 15
-      }
-
-      Text {
-        id: bluetoothLabel
-
-        anchors.verticalCenter: parent.verticalCenter
-        width: Math.min(96, implicitWidth)
-        text: root.bluetoothStatusText()
-        color: root.bluetoothPopupOpen || bluetoothArea.containsMouse ? theme.accent : theme.foreground
-        elide: Text.ElideRight
-        font.pixelSize: 12
-        font.weight: Font.Medium
-      }
+    Text {
+      anchors.centerIn: parent
+      text: (root.bluetoothAdapter && root.bluetoothAdapter.powered)
+        ? (root.connectedBluetoothName() !== "" ? "󰂱" : "󰂯")
+        : "󰂲"
+      font.pixelSize: 14
+      font.family: "Symbols Nerd Font"
+      color: root.bluetoothPopupOpen ? theme.accentContainerForeground : theme.foreground
+      Behavior on color { ColorAnimation { duration: 120 } }
     }
 
     MouseArea {
@@ -346,7 +314,7 @@ Row {
     id: wifiPopup
 
     anchor.window: root.parentWindow
-    anchor.rect.x: Math.max(theme.barPadding, Math.min(root.parentWindow.width - width - theme.barPadding, wifiButton.mapToItem(null, 0, 0).x + wifiButton.width - width))
+    anchor.rect.x: Math.max(theme.islandPaddingH, Math.min(root.parentWindow.width - width - theme.islandPaddingH, wifiButton.mapToItem(null, 0, 0).x + wifiButton.width - width))
     anchor.rect.y: theme.barHeight + 6
     implicitWidth: 336
     implicitHeight: 384
@@ -769,7 +737,7 @@ Row {
     id: bluetoothPopup
 
     anchor.window: root.parentWindow
-    anchor.rect.x: Math.max(theme.barPadding, Math.min(root.parentWindow.width - width - theme.barPadding, bluetoothButton.mapToItem(null, 0, 0).x + bluetoothButton.width - width))
+    anchor.rect.x: Math.max(theme.islandPaddingH, Math.min(root.parentWindow.width - width - theme.islandPaddingH, bluetoothButton.mapToItem(null, 0, 0).x + bluetoothButton.width - width))
     anchor.rect.y: theme.barHeight + 6
     implicitWidth: 320
     implicitHeight: 340

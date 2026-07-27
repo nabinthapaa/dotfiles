@@ -279,7 +279,7 @@ Scope {
       Rectangle {
         id: bubble
 
-        width: Math.max(220, Math.min(320, parent.width - theme.barPadding * 2))
+        width: Math.max(220, Math.min(320, parent.width - theme.islandPaddingH * 2))
         height: parent.height
         x: (parent.width - width) / 2
         radius: theme.radiusLarge

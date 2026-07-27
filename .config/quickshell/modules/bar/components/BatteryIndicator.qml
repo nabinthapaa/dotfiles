@@ -1,103 +1,66 @@
+// BatteryIndicator.qml — Compact icon + percentage label, hidden when absent.
 import Quickshell.Services.UPower
 import QtQuick
 import "../../../shared"
 
-Item {
+Row {
   id: root
 
-  readonly property var battery: laptopBattery()
+  spacing: 4
+  visible: available
+
+  Theme { id: theme }
+
+  readonly property var battery: findLaptopBattery()
   readonly property bool available: battery !== null && battery.ready && battery.isPresent
-  readonly property int percent: available ? normalizePercentage(battery.percentage) : 0
+  readonly property int percent: available ? normalized(battery.percentage) : 0
   readonly property string state: available ? UPowerDeviceState.toString(battery.state) : "Unknown"
   readonly property bool charging: state === "Charging" || state === "PendingCharge"
   readonly property bool full: state === "FullyCharged" || percent >= 100
   readonly property bool low: !charging && percent <= 15
 
-  width: visible ? batteryRow.implicitWidth : 0
-  height: theme.controlSize
-  visible: available
-
-  function laptopBattery() {
+  function findLaptopBattery() {
     const devices = UPower.devices.values;
-    for (let index = 0; index < devices.length; index++) {
-      if (devices[index].isLaptopBattery) {
-        return devices[index];
-      }
+    for (let i = 0; i < devices.length; i++) {
+      if (devices[i].isLaptopBattery) return devices[i];
     }
-
-    return UPower.displayDevice && UPower.displayDevice.ready && UPower.displayDevice.isPresent
-      ? UPower.displayDevice
-      : null;
+    if (UPower.displayDevice && UPower.displayDevice.ready && UPower.displayDevice.isPresent) {
+      return UPower.displayDevice;
+    }
+    return null;
   }
 
-  function normalizePercentage(value) {
-    if (value <= 1) {
-      value = value * 100;
-    }
-
-    return Math.max(0, Math.min(100, Math.round(value)));
+  function normalized(v) {
+    return Math.max(0, Math.min(100, Math.round(v <= 1 ? v * 100 : v)));
   }
 
-  function batteryIcon() {
-    if (charging) {
-      return "󰂄";
-    }
-    if (full) {
-      return "󰁹";
-    }
-    if (percent <= 10) {
-      return "󰁺";
-    }
-    if (percent <= 20) {
-      return "󰁻";
-    }
-    if (percent <= 30) {
-      return "󰁼";
-    }
-    if (percent <= 40) {
-      return "󰁽";
-    }
-    if (percent <= 50) {
-      return "󰁾";
-    }
-    if (percent <= 60) {
-      return "󰁿";
-    }
-    if (percent <= 70) {
-      return "󰂀";
-    }
-    if (percent <= 80) {
-      return "󰂁";
-    }
-    if (percent <= 90) {
-      return "󰂂";
-    }
+  function icon() {
+    if (charging || full) return "󰂄";
+    if (percent <= 10) return "󰁺";
+    if (percent <= 20) return "󰁻";
+    if (percent <= 30) return "󰁼";
+    if (percent <= 40) return "󰁽";
+    if (percent <= 50) return "󰁾";
+    if (percent <= 60) return "󰁿";
+    if (percent <= 70) return "󰂀";
+    if (percent <= 80) return "󰂁";
+    if (percent <= 90) return "󰂂";
     return "󰁹";
   }
 
-  Theme {
-    id: theme
+  Text {
+    anchors.verticalCenter: parent.verticalCenter
+    text: root.icon()
+    font.pixelSize: 14
+    font.family: "Symbols Nerd Font"
+    color: root.low ? theme.urgent : root.charging ? theme.accent : theme.foreground
   }
 
-  Row {
-    id: batteryRow
-
+  Text {
     anchors.verticalCenter: parent.verticalCenter
-    spacing: 6
-
-    Text {
-      anchors.verticalCenter: parent.verticalCenter
-      text: root.batteryIcon()
-      color: root.low ? theme.warning : theme.foreground
-      font.pixelSize: 15
-    }
-
-    Text {
-      anchors.verticalCenter: parent.verticalCenter
-      text: root.percent + "%"
-      color: root.low ? theme.warning : theme.foreground
-      font.pixelSize: 12
-      font.weight: Font.Medium
-    }
+    text: root.percent + "%"
+    font.pixelSize: 11
+    font.weight: Font.Medium
+    color: root.low ? theme.urgent : theme.foreground
   }
 }

@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 import "../../shared"
 import "components"
@@ -9,9 +10,7 @@ Scope {
   required property var notificationServer
   required property var osd
 
-  Theme {
-    id: theme
-  }
+  Theme { id: theme }
 
   Variants {
     model: Quickshell.screens
@@ -21,9 +20,11 @@ Scope {
       required property var modelData
 
       screen: modelData
+
       implicitHeight: theme.barHeight
-      color: theme.background
       exclusiveZone: theme.barHeight
+
+      color: "transparent"
 
       anchors {
         top: true
@@ -31,90 +32,91 @@ Scope {
         right: true
       }
 
+      AppLauncher {
+        id: appLauncher
+        parentWindow: bar
+      }
+
+      WallpaperLauncher {
+        id: wallpaperLauncher
+        parentWindow: bar
+      }
+
       Item {
         anchors.fill: parent
-        anchors.leftMargin: theme.barPadding
-        anchors.rightMargin: theme.barPadding
-
-        Row {
-          id: leftGroup
-
+        BarIsland {
           anchors.left: parent.left
+          anchors.leftMargin: 8
           anchors.verticalCenter: parent.verticalCenter
-          spacing: theme.gap
+          implicitWidth: leftRow.implicitWidth + theme.islandPaddingH * 2
 
-          AppLauncher {
-            parentWindow: bar
-            anchors.verticalCenter: parent.verticalCenter
-          }
+          Row {
+            id: leftRow
+            anchors.centerIn: parent
+            spacing: theme.gap
 
-          WallpaperLauncher {
-            parentWindow: bar
-            anchors.verticalCenter: parent.verticalCenter
-          }
-
-          WorkspaceList {
-            id: workspaces
-            screen: bar.screen
-            anchors.verticalCenter: parent.verticalCenter
+            WorkspaceList {
+              screen: bar.screen
+              anchors.verticalCenter: parent.verticalCenter
+            }
           }
         }
 
-        ClockWidget {
+        BarIsland {
           anchors.centerIn: parent
+          implicitWidth: centerRow.implicitWidth + theme.islandPaddingH * 2
+
+          Row {
+            id: centerRow
+            anchors.centerIn: parent
+
+            ClockWidget {}
+          }
         }
 
-        Row {
+        BarIsland {
           anchors.right: parent.right
+          anchors.rightMargin: 8
           anchors.verticalCenter: parent.verticalCenter
-          spacing: theme.gap
+          implicitWidth: rightRow.implicitWidth + theme.islandPaddingH * 2
 
-          ConnectivityButtons {
-            parentWindow: bar
-            anchors.verticalCenter: parent.verticalCenter
-          }
+          Row {
+            id: rightRow
+            anchors.centerIn: parent
+            spacing: theme.gap
 
-          BatteryIndicator {
-            anchors.verticalCenter: parent.verticalCenter
-          }
-
-          Tray {
-            parentWindow: bar
-            anchors.verticalCenter: parent.verticalCenter
-          }
-
-          ClipboardLauncher {
-            id: clipboardLauncher
-            parentWindow: bar
-            anchors.verticalCenter: parent.verticalCenter
-          }
-
-          Rectangle {
-            width: theme.controlSize
-            height: theme.controlSize
-            radius: theme.radiusLarge
-            color: clipboardLauncher.open ? theme.accentContainer : clipboardArea.containsMouse ? theme.surfaceHover : theme.surface
-
-            Text {
-              anchors.centerIn: parent
-              text: "󰅇"
-              color: clipboardLauncher.open ? theme.accentContainerForeground : theme.foreground
-              font.pixelSize: 15
+            ConnectivityButtons {
+              parentWindow: bar
+              anchors.verticalCenter: parent.verticalCenter
             }
 
-            MouseArea {
-              id: clipboardArea
-              anchors.fill: parent
-              hoverEnabled: true
-              cursorShape: Qt.PointingHandCursor
+            BatteryIndicator {
+              anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Tray {
+              parentWindow: bar
+              anchors.verticalCenter: parent.verticalCenter
+            }
+            ClipboardLauncher {
+              id: clipboardLauncher
+              parentWindow: bar
+              anchors.verticalCenter: parent.verticalCenter
+            }
+
+            BarIconButton {
+              icon: "󰅇"
+              active: clipboardLauncher.open
+              anchors.verticalCenter: parent.verticalCenter
               onClicked: clipboardLauncher.open = !clipboardLauncher.open
             }
-          }
 
-          SidebarButton {
-            anchors.verticalCenter: parent.verticalCenter
-            active: controlPanel.open
-            onClicked: controlPanel.open = !controlPanel.open
+            // Control panel toggle
+            SidebarButton {
+              anchors.verticalCenter: parent.verticalCenter
+              active: controlPanel.open
+              onClicked: controlPanel.open = !controlPanel.open
+            }
           }
         }
       }
