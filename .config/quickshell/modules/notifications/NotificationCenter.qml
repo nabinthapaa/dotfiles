@@ -9,6 +9,7 @@ Scope {
 
   property alias server: notificationServer
   property var toastNotifications: []
+  property bool dndEnabled: false
 
   function pushToast(notification) {
     toastNotifications = [notification].concat(toastNotifications).slice(0, 4);
@@ -62,7 +63,7 @@ Scope {
     onNotification: notification => {
       notification.tracked = true;
 
-      if (!notification.lastGeneration) {
+      if (!notification.lastGeneration && !root.dndEnabled) {
         root.pushToast(notification);
         notificationSound.running = false;
         notificationSound.running = true;

@@ -17,8 +17,8 @@ Item {
   readonly property var filteredWallpapers: filterWallpapers()
   readonly property var hyprMonitor: Hyprland.monitorFor(root.parentWindow.screen)
   readonly property string ipcTargetName: hyprMonitor ? hyprMonitor.name : root.parentWindow.screen.name
-  readonly property int popupWidth: Math.min(760, root.parentWindow.width - theme.islandPaddingH * 2)
-  readonly property int popupHeight: Math.min(560, root.parentWindow.screen.height - theme.barHeight - theme.islandPaddingH * 2)
+  readonly property int popupWidth: Math.min(880, root.parentWindow.width - theme.islandPaddingH * 2)
+  readonly property int popupHeight: Math.min(680, root.parentWindow.screen.height - theme.barHeight - theme.islandPaddingH * 2)
 
   width: 0
   height: 0
@@ -32,8 +32,8 @@ Item {
   }
 
   onSelectedIndexChanged: {
-    if (root.open && wallpaperList && root.filteredWallpapers.length > 0) {
-      wallpaperList.positionViewAtIndex(selectedIndex, ListView.Contain);
+    if (root.open && wallpaperGrid && root.filteredWallpapers.length > 0) {
+      wallpaperGrid.positionViewAtIndex(selectedIndex, GridView.Contain);
     }
   }
 
@@ -67,18 +67,29 @@ Item {
     if (filteredWallpapers.length === 0) {
       return "";
     }
-
     return filteredWallpapers[Math.max(0, Math.min(selectedIndex, filteredWallpapers.length - 1))];
   }
-
-  function cycleSelection(direction) {
+  
+  function cycleSelectionGrid(dx, dy) {
     const count = filteredWallpapers.length;
-    if (count === 0) {
-      selectedIndex = 0;
-      return;
+    if (count === 0) return;
+    
+    // dx = -1/1 (left/right), dy = -1/1 (up/down)
+    const cols = Math.max(1, Math.floor(wallpaperGrid.width / wallpaperGrid.cellWidth));
+    
+    let newIndex = selectedIndex;
+    if (dx !== 0) {
+        newIndex += dx;
     }
-
-    selectedIndex = (selectedIndex + direction + count) % count;
+    if (dy !== 0) {
+        newIndex += dy * cols;
+    }
+    
+    // bounds check
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= count) newIndex = count - 1;
+    
+    selectedIndex = newIndex;
   }
 
   function resetSelection(preferCurrent) {
@@ -93,15 +104,17 @@ Item {
 
     selectedIndex = nextIndex;
     Qt.callLater(() => {
-      if (wallpaperList) {
-        wallpaperList.positionViewAtIndex(nextIndex, ListView.Beginning);
+      if (wallpaperGrid) {
+        wallpaperGrid.positionViewAtIndex(nextIndex, GridView.Beginning);
       }
     });
   }
 
   function refreshWallpapers() {
-    wallpaperListProc.exec(["bash", "-lc", "find \"$HOME/wallpaper\" -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) -printf '%p\\n' | sort -f"]);
-    currentWallpaperProc.exec(["bash", "-lc", "cat \"$HOME/.config/hypr/cache/current_wallpaper\" 2>/dev/null || true"]);
+    wallpaperListProc.running = false;
+    wallpaperListProc.running = true;
+    currentWallpaperProc.running = false;
+    currentWallpaperProc.running = true;
   }
 
   function applyWallpaper(path) {
@@ -131,7 +144,7 @@ Item {
 
   Process {
     id: wallpaperListProc
-
+    command: ["bash", "-lc", "find \"$HOME/wallpaper\" -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) -printf '%p\\n' | sort -f"]
     stdout: StdioCollector {
       onStreamFinished: {
         const output = text.trim();
@@ -145,7 +158,7 @@ Item {
 
   Process {
     id: currentWallpaperProc
-
+    command: ["bash", "-lc", "cat \"$HOME/.config/hypr/cache/current_wallpaper\" 2>/dev/null || true"]
     stdout: StdioCollector {
       onStreamFinished: {
         root.currentWallpaper = text.trim();
@@ -205,50 +218,46 @@ Item {
       transformOrigin: Item.Center
 
       Behavior on scale {
-        NumberAnimation {
-          duration: 150
-          easing.type: Easing.OutCubic
-        }
+        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
       }
-
       Behavior on opacity {
-        NumberAnimation {
-          duration: 120
-          easing.type: Easing.OutCubic
-        }
+        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
       }
 
       Column {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 12
+        anchors.margins: 16
+        spacing: 16
 
+        // Search Bar (Sleek, borderless look)
         Rectangle {
           width: parent.width
-          height: 42
-          radius: theme.radiusLarge
+          height: 48
+          radius: theme.radius
           color: theme.surface
-          border.width: 1
-          border.color: searchInput.activeFocus ? theme.accent : theme.border
+          border.width: searchInput.activeFocus ? 2 : 1
+          border.color: searchInput.activeFocus ? theme.accent : Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
+
+          Behavior on border.color { ColorAnimation { duration: 120 } }
 
           Row {
             anchors.fill: parent
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            spacing: 10
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            spacing: 12
 
             Text {
               anchors.verticalCenter: parent.verticalCenter
               text: "󰸉"
-              color: theme.muted
-              font.pixelSize: 15
+              color: searchInput.activeFocus ? theme.accent : theme.muted
+              font.pixelSize: 18
+              Behavior on color { ColorAnimation { duration: 120 } }
             }
 
             TextInput {
               id: searchInput
-
               anchors.verticalCenter: parent.verticalCenter
-              width: parent.width - 25
+              width: parent.width - 32
               height: parent.height
               text: root.query
               color: theme.foreground
@@ -256,7 +265,8 @@ Item {
               selectedTextColor: theme.accentContainerForeground
               verticalAlignment: TextInput.AlignVCenter
               clip: true
-              font.pixelSize: 14
+              font.pixelSize: 15
+              
               onTextChanged: {
                 root.query = text;
                 root.resetSelection(false);
@@ -266,10 +276,22 @@ Item {
               Keys.onEscapePressed: root.open = false
               Keys.onPressed: event => {
                 if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
-                  root.cycleSelection(1);
+                  root.cycleSelectionGrid(1, 0); // Next
                   event.accepted = true;
                 } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_P) {
-                  root.cycleSelection(-1);
+                  root.cycleSelectionGrid(-1, 0); // Previous
+                  event.accepted = true;
+                } else if (event.key === Qt.Key_Right) {
+                  root.cycleSelectionGrid(1, 0);
+                  event.accepted = true;
+                } else if (event.key === Qt.Key_Left) {
+                  root.cycleSelectionGrid(-1, 0);
+                  event.accepted = true;
+                } else if (event.key === Qt.Key_Down) {
+                  root.cycleSelectionGrid(0, 1);
+                  event.accepted = true;
+                } else if (event.key === Qt.Key_Up) {
+                  root.cycleSelectionGrid(0, -1);
                   event.accepted = true;
                 }
               }
@@ -277,154 +299,118 @@ Item {
           }
         }
 
-        Row {
+        // Grid View Area
+        Item {
           width: parent.width
           height: parent.height - y
-          spacing: 12
-
-          Rectangle {
-            id: previewPane
-
-            width: Math.round(parent.width * 0.48)
-            height: parent.height
-            radius: theme.radiusLarge
-            color: theme.surface
-            border.width: 1
-            border.color: theme.border
-            clip: true
-
-            Image {
-              anchors.fill: parent
-              source: root.selectedWallpaper().length > 0 ? root.fileUrl(root.selectedWallpaper()) : ""
-              sourceSize.width: width
-              sourceSize.height: height
-              fillMode: Image.PreserveAspectCrop
-              visible: source.toString().length > 0
-            }
-
-            Rectangle {
-              anchors.left: parent.left
-              anchors.right: parent.right
-              anchors.bottom: parent.bottom
-              height: 72
-              color: theme.panel
-              opacity: 0.92
-              visible: root.selectedWallpaper().length > 0
-            }
-
-            Column {
-              anchors.left: parent.left
-              anchors.right: parent.right
-              anchors.bottom: parent.bottom
-              anchors.margins: 14
-              spacing: 4
-              visible: root.selectedWallpaper().length > 0
-
-              Text {
-                width: parent.width
-                text: root.displayName(root.selectedWallpaper())
-                color: theme.foreground
-                elide: Text.ElideRight
-                font.pixelSize: 14
-                font.weight: Font.DemiBold
-              }
-
-              Text {
-                width: parent.width
-                text: root.selectedWallpaper() === root.currentWallpaper ? "Current wallpaper" : "Enter to apply"
-                color: theme.muted
-                elide: Text.ElideRight
-                font.pixelSize: 11
-                font.weight: Font.Medium
-              }
-            }
-
-            Text {
-              anchors.centerIn: parent
-              width: parent.width - 32
-              text: "No wallpaper selected"
-              color: theme.muted
-              horizontalAlignment: Text.AlignHCenter
-              font.pixelSize: 13
-              visible: root.selectedWallpaper().length === 0
-            }
+          
+          Text {
+            anchors.centerIn: parent
+            text: "No wallpapers found"
+            color: theme.muted
+            font.pixelSize: 14
+            visible: root.filteredWallpapers.length === 0
           }
 
-          Rectangle {
-            width: parent.width - previewPane.width - parent.spacing
-            height: parent.height
-            radius: theme.radiusLarge
-            color: theme.surfaceHigh
-            border.width: 1
-            border.color: theme.border
+          GridView {
+            id: wallpaperGrid
+            anchors.fill: parent
             clip: true
-
-            Text {
-              anchors.centerIn: parent
-              width: parent.width - 32
-              text: "No wallpapers found"
-              color: theme.muted
-              horizontalAlignment: Text.AlignHCenter
-              font.pixelSize: 13
-              visible: root.filteredWallpapers.length === 0
-            }
-
-            ListView {
-              id: wallpaperList
-
-              anchors.fill: parent
-              anchors.margins: 8
-              clip: true
-              visible: root.filteredWallpapers.length > 0
-              model: root.filteredWallpapers
-              spacing: 6
-              boundsBehavior: Flickable.StopAtBounds
-              currentIndex: root.selectedIndex
-
-              delegate: Rectangle {
-                id: wallpaperRow
-
-                required property string modelData
-                required property int index
-
-                readonly property bool selected: root.selectedIndex === index
-                readonly property bool current: modelData === root.currentWallpaper
-
-                width: wallpaperList.width
-                height: 50
-                radius: theme.radiusLarge
-                color: selected
-                  ? theme.accentContainer
-                  : wallpaperArea.containsMouse ? theme.surfaceHover : "transparent"
-
+            model: root.filteredWallpapers
+            
+            // 3 columns layout (account for scrollbar padding if any)
+            cellWidth: Math.floor(width / 3)
+            // 16:9 aspect ratio + spacing
+            cellHeight: Math.round(cellWidth * (9/16)) + 8 
+            
+            currentIndex: root.selectedIndex
+            boundsBehavior: Flickable.StopAtBounds
+            
+            delegate: Item {
+              id: wallpaperRow
+              
+              required property string modelData
+              required property int index
+              
+              readonly property bool selected: root.selectedIndex === index
+              readonly property bool current: modelData === root.currentWallpaper
+              
+              width: wallpaperGrid.cellWidth
+              height: wallpaperGrid.cellHeight
+              
+              Rectangle {
+                id: card
+                anchors.fill: parent
+                anchors.margins: 6
+                radius: theme.radius
+                color: theme.surfaceHigh
+                clip: true
+                
+                border.width: wallpaperRow.selected ? 4 : 1
+                border.color: wallpaperRow.selected ? theme.accent : Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
+                
+                scale: wallpaperRow.selected ? 1.05 : (wallpaperArea.containsMouse ? 1.02 : 1.0)
+                z: wallpaperRow.selected ? 10 : (wallpaperArea.containsMouse ? 5 : 0)
+                
+                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on border.width { NumberAnimation { duration: 120 } }
+                Behavior on border.color { ColorAnimation { duration: 120 } }
+                
+                Image {
+                  anchors.fill: parent
+                  source: root.fileUrl(wallpaperRow.modelData)
+                  sourceSize.width: width
+                  sourceSize.height: height
+                  fillMode: Image.PreserveAspectCrop
+                  asynchronous: true
+                }
+                
+                // Dim gradient overlay at the bottom for text readability
+                Rectangle {
+                  anchors.left: parent.left
+                  anchors.right: parent.right
+                  anchors.bottom: parent.bottom
+                  height: 36
+                  gradient: Gradient {
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.8) }
+                  }
+                }
+                
                 Text {
                   anchors.left: parent.left
-                  anchors.leftMargin: 12
-                  anchors.right: currentBadge.left
-                  anchors.rightMargin: 8
-                  anchors.verticalCenter: parent.verticalCenter
-                  text: root.displayName(wallpaperRow.modelData)
-                  color: wallpaperRow.selected ? theme.accentContainerForeground : theme.foreground
-                  elide: Text.ElideRight
-                  maximumLineCount: 1
-                  font.pixelSize: 13
-                  font.weight: wallpaperRow.selected ? Font.DemiBold : Font.Medium
-                }
-
-                Text {
-                  id: currentBadge
-
                   anchors.right: parent.right
-                  anchors.rightMargin: 12
-                  anchors.verticalCenter: parent.verticalCenter
-                  width: visible ? implicitWidth : 0
-                  text: "Current"
-                  color: wallpaperRow.selected ? theme.accentContainerForeground : theme.accent
-                  visible: wallpaperRow.current
-                  font.pixelSize: 10
+                  anchors.bottom: parent.bottom
+                  anchors.leftMargin: 10
+                  anchors.rightMargin: 10
+                  anchors.bottomMargin: 8
+                  text: root.displayName(wallpaperRow.modelData)
+                  color: "#ffffff" // Always white for contrast against dark gradient
+                  font.pixelSize: 12
                   font.weight: Font.DemiBold
+                  elide: Text.ElideRight
                 }
-
+                
+                // Current wallpaper badge (Floating Checkmark)
+                Rectangle {
+                  anchors.top: parent.top
+                  anchors.right: parent.right
+                  anchors.margins: 8
+                  width: 24
+                  height: 24
+                  radius: theme.radiusPill
+                  color: theme.accent
+                  visible: wallpaperRow.current
+                  
+                  Text {
+                    anchors.centerIn: parent
+                    text: "󰄬"
+                    color: theme.accentForeground
+                    font.pixelSize: 14
+                    font.weight: Font.Bold
+                  }
+                }
+                
                 MouseArea {
                   id: wallpaperArea
                   anchors.fill: parent

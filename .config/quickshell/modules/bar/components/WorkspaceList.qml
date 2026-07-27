@@ -30,6 +30,23 @@ Row {
     return result;
   }
 
+  function getIconForClass(cls) {
+    if (!cls) return "";
+    cls = String(cls).toLowerCase();
+    if (cls.indexOf("firefox") !== -1 || cls.indexOf("zen") !== -1) return "";
+    if (cls.indexOf("chrome") !== -1 || cls.indexOf("brave") !== -1) return "";
+    if (cls.indexOf("kitty") !== -1 || cls.indexOf("alacritty") !== -1 || cls.indexOf("term") !== -1 || cls.indexOf("ghostty") !== -1) return "";
+    if (cls.indexOf("code") !== -1 || cls.indexOf("cursor") !== -1) return "";
+    if (cls.indexOf("discord") !== -1 || cls.indexOf("vesktop") !== -1) return "";
+    if (cls.indexOf("spotify") !== -1) return "";
+    if (cls.indexOf("thunar") !== -1 || cls.indexOf("nemo") !== -1 || cls.indexOf("dolphin") !== -1 || cls.indexOf("files") !== -1) return "";
+    if (cls.indexOf("slack") !== -1) return "";
+    if (cls.indexOf("obs") !== -1) return "";
+    if (cls.indexOf("steam") !== -1) return "";
+    if (cls.indexOf("telegram") !== -1) return "";
+    return ""; // generic window
+  }
+
   Repeater {
     model: root.workspaces
 
@@ -44,8 +61,18 @@ Row {
         && root.monitor.activeWorkspace.id === wsId
       readonly property bool urgent: modelData.urgent ?? false
 
-      // Active: wide labeled pill.  Inactive: small circle with number.
-      width: active ? label.implicitWidth + 16 : 22
+      readonly property var latestToplevel: modelData.toplevels && modelData.toplevels.values.length > 0 ? modelData.toplevels.values[modelData.toplevels.values.length - 1] : null
+      readonly property string clientClass: {
+        if (!latestToplevel) return "";
+        if (latestToplevel.wayland && latestToplevel.wayland.appId) return latestToplevel.wayland.appId;
+        if (latestToplevel.lastIpcObject && latestToplevel.lastIpcObject.class) return latestToplevel.lastIpcObject.class;
+        return "";
+      }
+      
+      readonly property string wsIcon: root.getIconForClass(clientClass)
+
+      // Active: wide labeled pill.  Inactive: small circle with number/icon.
+      width: active ? label.implicitWidth + 16 : 24
       height: 22
       radius: theme.radiusPill
 
@@ -71,8 +98,8 @@ Row {
       Text {
         id: label
         anchors.centerIn: parent
-        text: wsBtn.wsId
-        font.pixelSize: 11
+        text: (wsBtn.active && wsBtn.wsIcon) ? wsBtn.wsIcon : wsBtn.wsId
+        font.pixelSize: (wsBtn.active && wsBtn.wsIcon) ? 13 : 11
         font.weight: wsBtn.active ? Font.Bold : Font.Medium
         color: wsBtn.urgent
           ? theme.background

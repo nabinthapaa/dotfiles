@@ -33,6 +33,7 @@ ShellRoot {
 
   TopBar {
     notificationServer: notifications.server
+    property var notificationCenter: notifications
     osd: osd
   }
 }

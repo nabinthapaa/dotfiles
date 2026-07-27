@@ -262,7 +262,7 @@ Scope {
       screen: modelData
       implicitHeight: 82
       color: "transparent"
-      visible: root.windowVisible
+      visible: false // Hidden in favor of Dynamic Island in TopBar
       aboveWindows: true
       exclusionMode: ExclusionMode.Ignore
 

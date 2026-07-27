@@ -7,7 +7,8 @@ Rectangle {
   id: root
 
   implicitHeight: theme.islandHeight
-  radius: theme.radiusPill
+  property real customRadius: theme.radiusPill
+  radius: customRadius
   color: theme.islandBg
   border.width: 1
   border.color: Qt.rgba(theme.islandBorder.r,
