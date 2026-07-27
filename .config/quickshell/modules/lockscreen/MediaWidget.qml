@@ -11,9 +11,10 @@ Rectangle {
   visible: player !== null
   height: visible ? 72 : 0
   radius: theme.radiusLarge
-  color: theme.surface
+  color: "transparent"
   border.width: 1
   border.color: theme.border
+  clip: true
   opacity: visible ? 1 : 0
 
   Theme {
@@ -22,6 +23,18 @@ Rectangle {
 
   Behavior on opacity {
     NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+  }
+
+  Image {
+    anchors.fill: parent
+    source: root.player ? root.player.trackArtUrl : ""
+    fillMode: Image.PreserveAspectCrop
+    visible: String(source).length > 0
+  }
+
+  Rectangle {
+    anchors.fill: parent
+    color: Qt.rgba(theme.surface.r, theme.surface.g, theme.surface.b, 0.82)
   }
 
   Row {

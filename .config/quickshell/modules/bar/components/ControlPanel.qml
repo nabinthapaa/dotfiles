@@ -534,6 +534,18 @@ Item {
             required property var modelData
             width: playerCarousel.width
             height: playerCarousel.height
+
+            Image {
+              anchors.fill: parent
+              source: modelData.trackArtUrl || ""
+              fillMode: Image.PreserveAspectCrop
+              visible: String(source).length > 0
+            }
+
+            Rectangle {
+              anchors.fill: parent
+              color: Qt.rgba(theme.surfaceHigh.r, theme.surfaceHigh.g, theme.surfaceHigh.b, 0.82)
+            }
             
             Row {
               anchors.fill: parent

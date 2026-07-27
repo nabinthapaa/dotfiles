@@ -36,11 +36,6 @@ function M.store()
 		"password",
 		"pass-",
 		"pass ",
-		"firefox",
-		"chromium",
-		"google-chrome",
-		"brave",
-		"browser",
 	}
 
 	for _, word in ipairs(ignored) do

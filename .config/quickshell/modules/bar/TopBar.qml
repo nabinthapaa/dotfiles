@@ -110,56 +110,102 @@ Scope {
               ClockWidget {}
             }
 
-            Row {
-              id: osdRow
+            Item {
+              id: osdContainer
               anchors.fill: parent
-              anchors.leftMargin: 16
-              anchors.rightMargin: 16
-              spacing: 12
               opacity: root.osd.active ? 1 : 0
               scale: root.osd.active ? 1 : 0.9
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
 
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.osd.icon
-                color: theme.accent
-                font.pixelSize: 16
-              }
+              // Has Level (Volume, Brightness)
+              Row {
+                anchors.fill: parent
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                spacing: 12
+                visible: root.osd.hasLevel
 
-              Item {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 16 - 24 - 32 // Remaining width minus icon (16), 2x spacing (24), and text (32)
-                height: 6
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: root.osd.icon
+                  color: theme.accent
+                  font.pixelSize: 16
+                }
 
-                Rectangle {
-                  anchors.fill: parent
-                  radius: 3
-                  color: theme.surfaceHover
+                Item {
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width - 16 - 12 - 32 // Remaining width minus icon (16), spacing (12), and text (32)
+                  height: 6
 
                   Rectangle {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: parent.width * root.osd.level
+                    anchors.fill: parent
                     radius: 3
-                    color: theme.accent
-                    
-                    Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                    color: theme.surfaceHover
+
+                    Rectangle {
+                      anchors.left: parent.left
+                      anchors.top: parent.top
+                      anchors.bottom: parent.bottom
+                      width: parent.width * root.osd.level
+                      radius: 3
+                      color: theme.accent
+                      
+                      Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                    }
                   }
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: 32
+                  text: Math.round(root.osd.level * 100) + "%"
+                  color: theme.foreground
+                  font.pixelSize: 12
+                  font.weight: Font.DemiBold
+                  horizontalAlignment: Text.AlignRight
                 }
               }
 
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 32
-                text: Math.round(root.osd.level * 100) + "%"
-                color: theme.foreground
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
-                horizontalAlignment: Text.AlignRight
+              // No Level (WiFi, Airplane Mode, Silent)
+              Row {
+                anchors.centerIn: parent
+                spacing: 8
+                visible: !root.osd.hasLevel
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: root.osd.icon
+                  color: theme.accent
+                  font.pixelSize: 16
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: root.osd.title
+                  color: theme.foreground
+                  font.pixelSize: 13
+                  font.weight: Font.DemiBold
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: "--"
+                  color: theme.muted
+                  font.pixelSize: 13
+                  font.weight: Font.Medium
+                  visible: root.osd.detail.length > 0
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: root.osd.detail
+                  color: theme.muted
+                  font.pixelSize: 13
+                  font.weight: Font.Medium
+                  visible: root.osd.detail.length > 0
+                }
               }
             }
           }

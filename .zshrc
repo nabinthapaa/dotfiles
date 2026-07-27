@@ -310,3 +310,4 @@ unset VIMRUNTIME
 
 # Added by Antigravity CLI installer
 export PATH="/home/nabin/.local/bin:$PATH"
+export PATH="/home/nabin/.devcontainers/bin:$PATH"

@@ -8,8 +8,8 @@ Scope {
   id: root
 
   readonly property var actions: [
-    { key: "lock", label: "Lock", icon: "", command: ["hyprlock"] },
-    { key: "exit", label: "Exit", icon: "󰍃", command: ["hyprctl", "dispatch", "exit"] },
+    { key: "lock", label: "Lock", icon: "", command: ["bash", "-c", "qs -p ~/dotfiles/.config/quickshell/ ipc call lock lock"] },
+    { key: "exit", label: "Exit", icon: "󰍃", command: ["uwsm", "stop"] },
     { key: "hibernate", label: "Hibernate", icon: "󰒲", command: ["systemctl", "hibernate"] },
     { key: "suspend", label: "Suspend", icon: "󰤄", command: ["systemctl", "suspend"] },
     { key: "reboot", label: "Reboot", icon: "󰜉", command: ["systemctl", "reboot"] },

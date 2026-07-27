@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import "../../shared"
 
@@ -15,6 +16,28 @@ Item {
   }
 
   property real shakeOffset: 0
+  property string nepaliDateText: ""
+
+  Process {
+    id: nepaliDateCommand
+    command: ["sh", "-c", Quickshell.env("HOME") + "/dotfiles/.config/quickshell/scripts/nepali-date.sh"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: {
+        root.nepaliDateText = text.trim();
+      }
+    }
+  }
+
+  Timer {
+    interval: 3600000 // 1 hour
+    running: true
+    repeat: true
+    onTriggered: {
+      nepaliDateCommand.running = false;
+      nepaliDateCommand.running = true;
+    }
+  }
 
   onVisibleChanged: {
     if (visible) {
@@ -81,7 +104,7 @@ Item {
 
       Text {
         width: parent.width
-        text: Qt.formatDate(root.controller.currentTime, "dddd, MMMM dd")
+        text: Qt.formatDate(root.controller.currentTime, "dddd, MMMM dd") + (root.nepaliDateText.length > 0 ? "  •  " + root.nepaliDateText : "")
         color: theme.muted
         font.pixelSize: 16
         font.weight: Font.Medium
