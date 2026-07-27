@@ -5,14 +5,18 @@ import Quickshell.Io
 import QtQuick
 import "../../../shared"
 
-Row {
+Item {
   id: root
-
-  spacing: 6
+  implicitWidth: row.implicitWidth
+  implicitHeight: row.implicitHeight
 
   Theme { id: theme }
 
   property string nepaliDateText: ""
+
+  Row {
+    id: row
+    spacing: 6
 
   SystemClock {
     id: clock
@@ -77,12 +81,13 @@ Row {
     color: Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.6)
   }
 
-  // 3. Right: English Date
-  Text {
-    anchors.verticalCenter: parent.verticalCenter
-    text: Qt.formatDateTime(clock.date, "ddd, d MMM")
-    color: theme.muted
-    font.pixelSize: 11
-    font.weight: Font.Medium
+    // 3. Right: English Date
+    Text {
+      anchors.verticalCenter: parent.verticalCenter
+      text: Qt.formatDateTime(clock.date, "ddd, d MMM")
+      color: theme.muted
+      font.pixelSize: 11
+      font.weight: Font.Medium
+    }
   }
 }

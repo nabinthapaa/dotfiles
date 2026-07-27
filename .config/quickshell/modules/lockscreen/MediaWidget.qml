@@ -1,5 +1,6 @@
 import Quickshell.Services.Mpris
 import QtQuick
+import Qt5Compat.GraphicalEffects
 import "../../shared"
 
 Rectangle {
@@ -26,15 +27,23 @@ Rectangle {
   }
 
   Image {
+    id: bgImg
     anchors.fill: parent
     source: root.player ? root.player.trackArtUrl : ""
     fillMode: Image.PreserveAspectCrop
-    visible: String(source).length > 0
+    visible: false
+  }
+
+  FastBlur {
+    anchors.fill: parent
+    source: bgImg
+    radius: 32
+    visible: String(bgImg.source).length > 0
   }
 
   Rectangle {
     anchors.fill: parent
-    color: Qt.rgba(theme.surface.r, theme.surface.g, theme.surface.b, 0.82)
+    color: Qt.rgba(theme.surface.r, theme.surface.g, theme.surface.b, 0.75)
   }
 
   Row {

@@ -1,7 +1,9 @@
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Services.Mpris
 import QtQuick
 import "../../shared"
+import "../calendar"
 import "components"
 
 Scope {
@@ -9,6 +11,28 @@ Scope {
 
   required property var notificationServer
   required property var osd
+
+  property var activePlayer: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+  property string lastTrackTitle: activePlayer ? activePlayer.trackTitle : ""
+  property int lastPlaybackState: activePlayer ? activePlayer.playbackState : 0
+  property bool mediaPopupActive: false
+
+  onLastTrackTitleChanged: triggerMediaPopup()
+  onLastPlaybackStateChanged: triggerMediaPopup()
+
+  function triggerMediaPopup() {
+    if (activePlayer && activePlayer.trackTitle.length > 0) {
+      mediaPopupActive = true;
+      mediaPopupTimer.restart();
+    }
+  }
+
+  Timer {
+    id: mediaPopupTimer
+    interval: 3500
+    repeat: false
+    onTriggered: mediaPopupActive = false
+  }
 
   Theme { id: theme }
 
@@ -23,7 +47,8 @@ Scope {
       property alias isControlPanelOpen: controlPanel.open
       property alias isWifiOpen: connectivityBtns.wifiPopupOpen
       property alias isBtOpen: connectivityBtns.bluetoothPopupOpen
-      property bool isAnyPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen
+      property alias isCalendarOpen: calendarMenu.open
+      property bool isAnyPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen || isCalendarOpen
 
       implicitHeight: screen.height
       exclusiveZone: theme.barHeight
@@ -44,6 +69,7 @@ Scope {
           bar.isControlPanelOpen = false;
           bar.isWifiOpen = false;
           bar.isBtOpen = false;
+          bar.isCalendarOpen = false;
         }
       }
 
@@ -62,6 +88,7 @@ Scope {
         id: wallpaperLauncher
         parentWindow: bar
       }
+
 
       Item {
         anchors.fill: parent
@@ -91,7 +118,7 @@ Scope {
           anchors.horizontalCenter: parent.horizontalCenter
           anchors.top: parent.top
           anchors.topMargin: (theme.barHeight - theme.islandHeight) / 2
-          implicitWidth: root.osd.active ? 240 : centerRow.implicitWidth + theme.islandPaddingH * 2
+          implicitWidth: root.osd.active ? 240 : (root.mediaPopupActive ? 280 : centerRow.implicitWidth + theme.islandPaddingH * 2)
 
           Behavior on implicitWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
 
@@ -101,8 +128,8 @@ Scope {
             Row {
               id: centerRow
               anchors.centerIn: parent
-              opacity: root.osd.active ? 0 : 1
-              scale: root.osd.active ? 0.9 : 1
+              opacity: root.osd.active || root.mediaPopupActive ? 0 : 1
+              scale: root.osd.active || root.mediaPopupActive ? 0.9 : 1
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
@@ -208,6 +235,52 @@ Scope {
                 }
               }
             }
+
+            // Media Popup
+            Row {
+              id: mediaRow
+              anchors.centerIn: parent
+              spacing: 12
+              opacity: root.mediaPopupActive && !root.osd.active ? 1 : 0
+              scale: root.mediaPopupActive && !root.osd.active ? 1 : 0.9
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+
+              Rectangle {
+                width: 26
+                height: 26
+                radius: 13
+                color: theme.surfaceHover
+                clip: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                Image {
+                  anchors.fill: parent
+                  source: root.activePlayer ? root.activePlayer.trackArtUrl : ""
+                  fillMode: Image.PreserveAspectCrop
+                  visible: String(source).length > 0
+                }
+
+                Text {
+                  anchors.centerIn: parent
+                  visible: !parent.children[0].visible
+                  text: "󰎆"
+                  color: theme.muted
+                  font.pixelSize: 12
+                }
+              }
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, 200)
+                text: root.activePlayer ? root.activePlayer.trackTitle : ""
+                color: theme.foreground
+                font.pixelSize: 13
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
+              }
+            }
           }
         }
 
@@ -304,6 +377,14 @@ Scope {
             }
           }
         }
+      }
+      
+      CalendarMenu {
+        id: calendarMenu
+        parentWindow: bar
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: theme.barHeight + 8
       }
     }
   }
