@@ -1,12 +1,5 @@
--- -----------------------------------------------
--- Hyprland Lua Configuration
--- https://wiki.hypr.land/Configuring/Start/
---
--- Split into modules under lua/ — require them below.
--- -----------------------------------------------
-
-require("lua/environment")
-require("lua/ui")
-require("lua/start")
-require("lua/windowrules")
-require("lua/keybindings")
+require("lua.env._index")
+require("lua.ui._index")
+require("lua.start")
+require("lua.windowrules")
+require("lua.keybindings._index")

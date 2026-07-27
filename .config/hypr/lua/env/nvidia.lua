@@ -1,0 +1,13 @@
+-- -----------------------------------------------
+-- NVIDIA https://wiki.hyprland.org/Nvidia/
+-- -----------------------------------------------
+
+-- hl.env("LIBVA_DRIVER_NAME", "nvidia")
+-- hl.env("GBM_BACKEND", "nvidia-drm")
+-- hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+-- hl.env("NVD_BACKEND", "direct")
+-- hl.env("MOZ_X11_EGL", "1")
+-- hl.env("MOZ_DISABLE_RDD_SANDBOX", "1")
+-- hl.env("__EGL_VENDOR_LIBRARY_FILENAMES", "/usr/share/glvnd/egl_vendor.d/10_nvidia.json")
+-- hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
+-- hl.env("SDL_VIDEODRIVER", "wayland")
