@@ -8,6 +8,8 @@ import "../../shared"
 Scope {
   id: root
 
+  required property var brightnessTracker
+
   property string title: "Volume"
   property string detail: ""
   property string icon: "󰕾"
@@ -39,7 +41,6 @@ Scope {
 
   Component.onCompleted: {
     syncWatchedState();
-    refreshBrightness();
     watchArmTimer.restart();
   }
 
@@ -108,9 +109,7 @@ Scope {
     showPowerProfile(currentPowerProfile);
   }
 
-  function refreshBrightness() {
-    brightnessProc.exec(["brightnessctl", "-m"]);
-  }
+
 
   function show(iconName, titleText, detailText, value, withLevel) {
     icon = iconName;
@@ -185,41 +184,20 @@ Scope {
     onTriggered: root.windowVisible = false
   }
 
-  Timer {
-    interval: 900
-    running: true
-    repeat: true
-    onTriggered: root.refreshBrightness()
-  }
-
-  Process {
-    id: brightnessProc
-
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const parts = text.trim().split(",");
-        if (parts.length < 4) {
-          return;
-        }
-
-        const parsed = Number(parts[3].replace("%", ""));
-        if (Number.isNaN(parsed)) {
-          return;
-        }
-
-        const nextBrightness = root.clamp(parsed / 100);
-        if (!root.watchChanges || root.lastBrightness < 0) {
-          root.lastBrightness = nextBrightness;
-          return;
-        }
-
-        if (Math.abs(nextBrightness - root.lastBrightness) < 0.005) {
-          return;
-        }
-
-        root.lastBrightness = nextBrightness;
-        root.showBrightness(nextBrightness);
+  Connections {
+    target: root.brightnessTracker
+    function onLevelChanged() {
+      if (!root.watchChanges || root.lastBrightness < 0) {
+        root.lastBrightness = root.brightnessTracker.level;
+        return;
       }
+
+      if (Math.abs(root.brightnessTracker.level - root.lastBrightness) < 0.005) {
+        return;
+      }
+
+      root.lastBrightness = root.brightnessTracker.level;
+      root.showBrightness(root.brightnessTracker.level);
     }
   }
 

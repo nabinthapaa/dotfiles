@@ -70,10 +70,21 @@ function M.toggle(target, title, log_file)
 		os.exit(0)
 	end
 
-	utils.notify_send(
-		"Quickshell " .. title,
-		"Could not open " .. title .. ". Check " .. log_file .. " and /tmp/quickshell-nabin.log."
+	local action = utils.execute_capture(
+		string.format(
+			"notify-send 'Quickshell %s' 'Could not open %s. Check %s and /tmp/quickshell-nabin.log.' -A 'open=Open File' -A 'copy=Copy Path'",
+			title,
+			title,
+			log_file
+		)
 	)
+
+	if action == "open" then
+		os.execute(string.format("xdg-open '%s' >/dev/null 2>&1 &", log_file))
+	elseif action == "copy" then
+		os.execute(string.format("printf '%%s' '%s' | wl-copy", log_file))
+	end
+
 	os.exit(1)
 end
 

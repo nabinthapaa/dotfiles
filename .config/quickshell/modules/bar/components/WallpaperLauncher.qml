@@ -189,237 +189,203 @@ Item {
     }
   }
 
-  PopupWindow {
-    id: wallpaperPopup
+  Column {
+    anchors.fill: parent
+    anchors.margins: 16
+    spacing: 16
+    opacity: root.open ? 1 : 0
+    visible: opacity > 0
+    Behavior on opacity { NumberAnimation { duration: 150 } }
 
-    anchor.window: root.parentWindow
-    anchor.rect.x: (root.parentWindow.width - width) / 2
-    anchor.rect.y: Math.max(theme.barHeight + 8, (root.parentWindow.screen.height - height) / 2)
-    implicitWidth: root.popupWidth
-    implicitHeight: root.popupHeight
-    visible: root.open
-    grabFocus: true
-    color: "transparent"
-
-    onVisibleChanged: {
-      if (!visible) {
-        root.open = false;
-      }
-    }
-
+    // Search Bar (Sleek, borderless look)
     Rectangle {
-      anchors.fill: parent
-      radius: theme.radiusLarge
-      color: theme.panel
-      border.width: 1
-      border.color: theme.border
-      opacity: root.open ? 1 : 0
-      scale: root.open ? 1 : 0.97
-      transformOrigin: Item.Center
+      width: parent.width
+      height: 48
+      radius: theme.radius
+      color: theme.surface
+      border.width: searchInput.activeFocus ? 2 : 1
+      border.color: searchInput.activeFocus ? theme.accent : Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
 
-      Behavior on scale {
-        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-      }
-      Behavior on opacity {
-        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-      }
+      Behavior on border.color { ColorAnimation { duration: 120 } }
 
-      Column {
+      Row {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+        anchors.leftMargin: 16
+        anchors.rightMargin: 16
+        spacing: 12
 
-        // Search Bar (Sleek, borderless look)
-        Rectangle {
-          width: parent.width
-          height: 48
-          radius: theme.radius
-          color: theme.surface
-          border.width: searchInput.activeFocus ? 2 : 1
-          border.color: searchInput.activeFocus ? theme.accent : Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: "󰸉"
+          color: searchInput.activeFocus ? theme.accent : theme.muted
+          font.pixelSize: 18
+          Behavior on color { ColorAnimation { duration: 120 } }
+        }
 
-          Behavior on border.color { ColorAnimation { duration: 120 } }
+        TextInput {
+          id: searchInput
+          anchors.verticalCenter: parent.verticalCenter
+          width: parent.width - 32
+          height: parent.height
+          text: root.query
+          color: theme.foreground
+          selectionColor: theme.accentContainer
+          selectedTextColor: theme.accentContainerForeground
+          verticalAlignment: TextInput.AlignVCenter
+          clip: true
+          font.pixelSize: 15
+          
+          onTextChanged: {
+            root.query = text;
+            root.resetSelection(false);
+          }
+          onAccepted: root.applyWallpaper(root.selectedWallpaper())
 
-          Row {
-            anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            spacing: 12
-
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              text: "󰸉"
-              color: searchInput.activeFocus ? theme.accent : theme.muted
-              font.pixelSize: 18
-              Behavior on color { ColorAnimation { duration: 120 } }
-            }
-
-            TextInput {
-              id: searchInput
-              anchors.verticalCenter: parent.verticalCenter
-              width: parent.width - 32
-              height: parent.height
-              text: root.query
-              color: theme.foreground
-              selectionColor: theme.accentContainer
-              selectedTextColor: theme.accentContainerForeground
-              verticalAlignment: TextInput.AlignVCenter
-              clip: true
-              font.pixelSize: 15
-              
-              onTextChanged: {
-                root.query = text;
-                root.resetSelection(false);
-              }
-              onAccepted: root.applyWallpaper(root.selectedWallpaper())
-
-              Keys.onEscapePressed: root.open = false
-              Keys.onPressed: event => {
-                if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
-                  root.cycleSelectionGrid(1, 0); // Next
-                  event.accepted = true;
-                } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_P) {
-                  root.cycleSelectionGrid(-1, 0); // Previous
-                  event.accepted = true;
-                } else if (event.key === Qt.Key_Right) {
-                  root.cycleSelectionGrid(1, 0);
-                  event.accepted = true;
-                } else if (event.key === Qt.Key_Left) {
-                  root.cycleSelectionGrid(-1, 0);
-                  event.accepted = true;
-                } else if (event.key === Qt.Key_Down) {
-                  root.cycleSelectionGrid(0, 1);
-                  event.accepted = true;
-                } else if (event.key === Qt.Key_Up) {
-                  root.cycleSelectionGrid(0, -1);
-                  event.accepted = true;
-                }
-              }
+          Keys.onEscapePressed: root.open = false
+          Keys.onPressed: event => {
+            if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
+              root.cycleSelectionGrid(1, 0); // Next
+              event.accepted = true;
+            } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_P) {
+              root.cycleSelectionGrid(-1, 0); // Previous
+              event.accepted = true;
+            } else if (event.key === Qt.Key_Right) {
+              root.cycleSelectionGrid(1, 0);
+              event.accepted = true;
+            } else if (event.key === Qt.Key_Left) {
+              root.cycleSelectionGrid(-1, 0);
+              event.accepted = true;
+            } else if (event.key === Qt.Key_Down) {
+              root.cycleSelectionGrid(0, 1);
+              event.accepted = true;
+            } else if (event.key === Qt.Key_Up) {
+              root.cycleSelectionGrid(0, -1);
+              event.accepted = true;
             }
           }
         }
+      }
+    }
 
-        // Grid View Area
-        Item {
-          width: parent.width
-          height: parent.height - y
+    // Grid View Area
+    Item {
+      width: parent.width
+      height: parent.height - y
+      
+      Text {
+        anchors.centerIn: parent
+        text: "No wallpapers found"
+        color: theme.muted
+        font.pixelSize: 14
+        visible: root.filteredWallpapers.length === 0
+      }
+
+      GridView {
+        id: wallpaperGrid
+        anchors.fill: parent
+        clip: true
+        model: root.filteredWallpapers
+        
+        // 3 columns layout (account for scrollbar padding if any)
+        cellWidth: Math.floor(width / 3)
+        // 16:9 aspect ratio + spacing
+        cellHeight: Math.round(cellWidth * (9/16)) + 8 
+        
+        currentIndex: root.selectedIndex
+        boundsBehavior: Flickable.StopAtBounds
+        
+        delegate: Item {
+          id: wallpaperRow
           
-          Text {
-            anchors.centerIn: parent
-            text: "No wallpapers found"
-            color: theme.muted
-            font.pixelSize: 14
-            visible: root.filteredWallpapers.length === 0
-          }
-
-          GridView {
-            id: wallpaperGrid
+          required property string modelData
+          required property int index
+          
+          readonly property bool selected: root.selectedIndex === index
+          readonly property bool current: modelData === root.currentWallpaper
+          
+          width: wallpaperGrid.cellWidth
+          height: wallpaperGrid.cellHeight
+          
+          Rectangle {
+            id: card
             anchors.fill: parent
+            anchors.margins: 6
+            radius: theme.radius
+            color: theme.surfaceHigh
             clip: true
-            model: root.filteredWallpapers
             
-            // 3 columns layout (account for scrollbar padding if any)
-            cellWidth: Math.floor(width / 3)
-            // 16:9 aspect ratio + spacing
-            cellHeight: Math.round(cellWidth * (9/16)) + 8 
+            border.width: wallpaperRow.selected ? 4 : 1
+            border.color: wallpaperRow.selected ? theme.accent : Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
             
-            currentIndex: root.selectedIndex
-            boundsBehavior: Flickable.StopAtBounds
+            scale: wallpaperRow.selected ? 1.05 : (wallpaperArea.containsMouse ? 1.02 : 1.0)
+            z: wallpaperRow.selected ? 10 : (wallpaperArea.containsMouse ? 5 : 0)
             
-            delegate: Item {
-              id: wallpaperRow
-              
-              required property string modelData
-              required property int index
-              
-              readonly property bool selected: root.selectedIndex === index
-              readonly property bool current: modelData === root.currentWallpaper
-              
-              width: wallpaperGrid.cellWidth
-              height: wallpaperGrid.cellHeight
-              
-              Rectangle {
-                id: card
-                anchors.fill: parent
-                anchors.margins: 6
-                radius: theme.radius
-                color: theme.surfaceHigh
-                clip: true
-                
-                border.width: wallpaperRow.selected ? 4 : 1
-                border.color: wallpaperRow.selected ? theme.accent : Qt.rgba(theme.border.r, theme.border.g, theme.border.b, 0.4)
-                
-                scale: wallpaperRow.selected ? 1.05 : (wallpaperArea.containsMouse ? 1.02 : 1.0)
-                z: wallpaperRow.selected ? 10 : (wallpaperArea.containsMouse ? 5 : 0)
-                
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                Behavior on border.width { NumberAnimation { duration: 120 } }
-                Behavior on border.color { ColorAnimation { duration: 120 } }
-                
-                Image {
-                  anchors.fill: parent
-                  source: root.fileUrl(wallpaperRow.modelData)
-                  sourceSize.width: width
-                  sourceSize.height: height
-                  fillMode: Image.PreserveAspectCrop
-                  asynchronous: true
-                }
-                
-                // Dim gradient overlay at the bottom for text readability
-                Rectangle {
-                  anchors.left: parent.left
-                  anchors.right: parent.right
-                  anchors.bottom: parent.bottom
-                  height: 36
-                  gradient: Gradient {
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.8) }
-                  }
-                }
-                
-                Text {
-                  anchors.left: parent.left
-                  anchors.right: parent.right
-                  anchors.bottom: parent.bottom
-                  anchors.leftMargin: 10
-                  anchors.rightMargin: 10
-                  anchors.bottomMargin: 8
-                  text: root.displayName(wallpaperRow.modelData)
-                  color: "#ffffff" // Always white for contrast against dark gradient
-                  font.pixelSize: 12
-                  font.weight: Font.DemiBold
-                  elide: Text.ElideRight
-                }
-                
-                // Current wallpaper badge (Floating Checkmark)
-                Rectangle {
-                  anchors.top: parent.top
-                  anchors.right: parent.right
-                  anchors.margins: 8
-                  width: 24
-                  height: 24
-                  radius: theme.radiusPill
-                  color: theme.accent
-                  visible: wallpaperRow.current
-                  
-                  Text {
-                    anchors.centerIn: parent
-                    text: "󰄬"
-                    color: theme.accentForeground
-                    font.pixelSize: 14
-                    font.weight: Font.Bold
-                  }
-                }
-                
-                MouseArea {
-                  id: wallpaperArea
-                  anchors.fill: parent
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onEntered: root.selectedIndex = index
-                  onClicked: root.applyWallpaper(wallpaperRow.modelData)
-                }
+            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+            Behavior on border.width { NumberAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+            
+            Image {
+              anchors.fill: parent
+              source: root.fileUrl(wallpaperRow.modelData)
+              sourceSize.width: width
+              sourceSize.height: height
+              fillMode: Image.PreserveAspectCrop
+              asynchronous: true
+            }
+            
+            // Dim gradient overlay at the bottom for text readability
+            Rectangle {
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.bottom: parent.bottom
+              height: 36
+              gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.8) }
               }
+            }
+            
+            Text {
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.bottom: parent.bottom
+              anchors.leftMargin: 10
+              anchors.rightMargin: 10
+              anchors.bottomMargin: 8
+              text: root.displayName(wallpaperRow.modelData)
+              color: "#ffffff" // Always white for contrast against dark gradient
+              font.pixelSize: 12
+              font.weight: Font.DemiBold
+              elide: Text.ElideRight
+            }
+            
+            // Current wallpaper badge (Floating Checkmark)
+            Rectangle {
+              anchors.top: parent.top
+              anchors.right: parent.right
+              anchors.margins: 8
+              width: 24
+              height: 24
+              radius: theme.radiusPill
+              color: theme.accent
+              visible: wallpaperRow.current
+              
+              Text {
+                anchors.centerIn: parent
+                text: "󰄬"
+                color: theme.accentForeground
+                font.pixelSize: 14
+                font.weight: Font.Bold
+              }
+            }
+            
+            MouseArea {
+              id: wallpaperArea
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onEntered: root.selectedIndex = index
+              onClicked: root.applyWallpaper(wallpaperRow.modelData)
             }
           }
         }

@@ -3,6 +3,8 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
 import "../../../shared"
+import "applauncher"
+import "applauncher/providers"
 
 Item {
   id: root
@@ -12,8 +14,7 @@ Item {
   property bool open: false
   property string query: ""
   property int selectedIndex: 0
-  readonly property var applications: DesktopEntries.applications.values
-  readonly property var filteredApplications: filterApplications()
+
   readonly property var hyprMonitor: Hyprland.monitorFor(root.parentWindow.screen)
   readonly property string ipcTargetName: hyprMonitor ? hyprMonitor.name : root.parentWindow.screen.name
   readonly property int popupWidth: Math.min(560, root.parentWindow.width - theme.islandPaddingH * 2)
@@ -21,6 +22,12 @@ Item {
 
   width: 0
   height: 0
+
+  AppProvider { id: appProvider }
+  FileProvider { id: fileProvider }
+  BannerManager { id: bannerManager }
+
+  property var activeProvider: appProvider
 
   onOpenChanged: {
     if (open) {
@@ -31,78 +38,67 @@ Item {
   }
 
   onSelectedIndexChanged: {
-    if (root.open && appList && root.filteredApplications.length > 0) {
+    if (root.open && appList && activeProvider.results.length > 0) {
       appList.positionViewAtIndex(selectedIndex, ListView.Contain);
     }
   }
 
-  function filterApplications() {
-    const search = query.trim().toLowerCase();
-    const apps = applications
-      .filter(app => app && !app.noDisplay)
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    if (search.length === 0) {
-      return apps;
+  Timer {
+    id: searchDebounce
+    interval: 150
+    repeat: false
+    onTriggered: {
+      const q = root.query.trim();
+      
+      if (q.startsWith("f: ") || q.startsWith("file: ")) {
+        root.activeProvider = fileProvider;
+        const subquery = q.replace(/^(f|file):\s*/, "");
+        fileProvider.search(subquery);
+        bannerManager.search(""); // clear banner
+      } else {
+        root.activeProvider = appProvider;
+        appProvider.search(q);
+        bannerManager.search(q);
+      }
     }
-
-    return apps.filter(app => {
-      const keywords = app.keywords ? app.keywords.join(" ") : "";
-      const categories = app.categories ? app.categories.join(" ") : "";
-      const haystack = [
-        app.name,
-        app.genericName,
-        app.comment,
-        keywords,
-        categories
-      ].join(" ").toLowerCase();
-
-      return haystack.indexOf(search) >= 0;
-    });
-  }
-
-  function iconSource(entry) {
-    if (!entry || entry.icon.length === 0) {
-      return "";
-    }
-
-    if (entry.icon.indexOf("/") >= 0 || entry.icon.indexOf(":") >= 0) {
-      return entry.icon;
-    }
-
-    const resolved = Quickshell.iconPath(entry.icon, true);
-    return resolved.length > 0 ? resolved : "";
   }
 
   function launch(entry) {
-    if (!entry) {
+    if (selectedIndex === -1 && bannerManager.hasBanner) {
+      bannerManager.launch();
+      open = false;
       return;
     }
 
-    entry.execute();
+    if (!entry) return;
+
+    activeProvider.launch(entry);
     open = false;
   }
 
   function selectedApplication() {
-    if (filteredApplications.length === 0) {
-      return null;
-    }
-
-    return filteredApplications[Math.max(0, Math.min(selectedIndex, filteredApplications.length - 1))];
+    if (activeProvider.results.length === 0) return null;
+    return activeProvider.results[Math.max(0, Math.min(selectedIndex, activeProvider.results.length - 1))];
   }
 
   function cycleSelection(direction) {
-    const count = filteredApplications.length;
+    const count = activeProvider.results.length;
+    const minIndex = bannerManager.hasBanner ? -1 : 0;
+    
     if (count === 0) {
-      selectedIndex = 0;
+      selectedIndex = minIndex;
       return;
     }
 
-    selectedIndex = (selectedIndex + direction + count) % count;
+    let nextIndex = selectedIndex + direction;
+    if (nextIndex < minIndex) nextIndex = count - 1;
+    if (nextIndex >= count) nextIndex = minIndex;
+    
+    selectedIndex = nextIndex;
   }
 
   function resetSelection() {
-    selectedIndex = 0;
+    selectedIndex = bannerManager.hasBanner ? -1 : 0;
     Qt.callLater(() => {
       if (appList) {
         appList.positionViewAtIndex(0, ListView.Beginning);
@@ -141,242 +137,116 @@ Item {
     }
   }
 
-  PopupWindow {
-    id: launcherPopup
+  Column {
+    anchors.fill: parent
+    anchors.margins: 14
+    spacing: 12
+    opacity: root.open ? 1 : 0
+    visible: opacity > 0
+    Behavior on opacity { NumberAnimation { duration: 150 } }
 
-    anchor.window: root.parentWindow
-    anchor.rect.x: (root.parentWindow.width - width) / 2
-    anchor.rect.y: Math.max(theme.barHeight + 8, (root.parentWindow.screen.height - height) / 2)
-    implicitWidth: root.popupWidth
-    implicitHeight: root.popupHeight
-    visible: root.open
-    grabFocus: true
-    color: "transparent"
+    Row {
+      width: parent.width
+      height: 42
+      spacing: 10
 
-    onVisibleChanged: {
-      if (!visible) {
-        root.open = false;
+      SearchBox {
+        id: searchInput
+        width: parent.width
+        icon: "󰍉"
+        text: root.query
+        onSearchTextChanged: (newText) => {
+          root.query = newText;
+          root.resetSelection();
+          searchDebounce.restart();
+        }
+        onAccepted: root.launch(root.selectedApplication())
+        onEscapePressed: root.open = false
+        onMoveSelection: (direction) => { root.cycleSelection(direction); }
       }
     }
 
-    Rectangle {
-      anchors.fill: parent
-      radius: theme.radiusLarge
-      color: theme.panel
-      border.width: 1
-      border.color: theme.border
-      opacity: root.open ? 1 : 0
-      scale: root.open ? 1 : 0.97
-      transformOrigin: Item.Center
+    Text {
+      width: parent.width
+      text: root.query.length === 0 ? root.activeProvider.name : root.activeProvider.results.length + " results"
+      color: theme.muted
+      font.pixelSize: 11
+      font.weight: Font.Medium
+    }
 
-      Behavior on scale {
-        NumberAnimation {
-          duration: 150
-          easing.type: Easing.OutCubic
-        }
-      }
+    Item {
+      width: parent.width
+      height: parent.height - y
 
-      Behavior on opacity {
-        NumberAnimation {
-          duration: 120
-          easing.type: Easing.OutCubic
-        }
+      Text {
+        anchors.centerIn: parent
+        width: parent.width - 32
+        text: root.activeProvider.loading ? "Searching..." : "No results found"
+        color: theme.muted
+        horizontalAlignment: Text.AlignHCenter
+        font.pixelSize: 13
+        visible: activeProvider.results.length === 0 && !bannerManager.hasBanner
       }
 
       Column {
         anchors.fill: parent
-        anchors.margins: 14
         spacing: 12
 
-        Row {
+        Rectangle {
           width: parent.width
-          height: 42
-          spacing: 10
-
-          Rectangle {
-            width: parent.width
-            height: parent.height
-            radius: theme.radiusLarge
-            color: theme.surface
-            border.width: 1
-            border.color: searchInput.activeFocus ? theme.accent : theme.border
-
-            Row {
-              anchors.fill: parent
-              anchors.leftMargin: 12
-              anchors.rightMargin: 12
-              spacing: 10
-
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "󰍉"
-                color: theme.muted
-                font.pixelSize: 15
-              }
-
-              TextInput {
-                id: searchInput
-
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 25
-                height: parent.height
-                text: root.query
-                color: theme.foreground
-                selectionColor: theme.accentContainer
-                selectedTextColor: theme.accentContainerForeground
-                verticalAlignment: TextInput.AlignVCenter
-                clip: true
-                font.pixelSize: 14
-                onTextChanged: {
-                  root.query = text;
-                  root.resetSelection();
-                }
-                onAccepted: root.launch(root.selectedApplication())
-
-                Keys.onEscapePressed: root.open = false
-                Keys.onPressed: event => {
-                  if (event.key === Qt.Key_Down) {
-                    root.cycleSelection(4);
-                    event.accepted = true;
-                  } else if (event.key === Qt.Key_Up) {
-                    root.cycleSelection(-4);
-                    event.accepted = true;
-                  } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
-                    root.cycleSelection(1);
-                    event.accepted = true;
-                  } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_P) {
-                    root.cycleSelection(-1);
-                    event.accepted = true;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        Text {
-          width: parent.width
-          text: root.query.length === 0 ? "Applications" : root.filteredApplications.length + " results"
-          color: theme.muted
-          font.pixelSize: 11
-          font.weight: Font.Medium
-        }
-
-        Item {
-          width: parent.width
-          height: parent.height - y
+          height: bannerManager.hasBanner ? 64 : 0
+          visible: bannerManager.hasBanner
+          radius: theme.radiusLarge
+          color: root.selectedIndex === -1 ? theme.accentContainer : (qalcArea.containsMouse ? theme.surfaceHover : theme.surface)
 
           Text {
             anchors.centerIn: parent
             width: parent.width - 32
-            text: "No applications found"
-            color: theme.muted
+            text: bannerManager.bannerText
+            color: root.selectedIndex === -1 ? theme.accentContainerForeground : theme.foreground
+            font.pixelSize: 24
+            font.weight: root.selectedIndex === -1 ? Font.Bold : Font.DemiBold
             horizontalAlignment: Text.AlignHCenter
-            font.pixelSize: 13
-            visible: root.filteredApplications.length === 0
+            verticalAlignment: Text.AlignVCenter
+            wrapMode: Text.Wrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
           }
 
-          GridView {
-            id: appList
-
+          MouseArea {
+            id: qalcArea
             anchors.fill: parent
-            clip: true
-            visible: root.filteredApplications.length > 0
-            model: root.filteredApplications
-            cellWidth: width / 4
-            cellHeight: 110
-            boundsBehavior: Flickable.StopAtBounds
-            currentIndex: root.selectedIndex
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: root.selectedIndex = -1
+            onClicked: root.launch(null)
+          }
 
-            delegate: Item {
-              id: appRow
+          Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+        }
 
-              required property var modelData
-              required property int index
+        GridView {
+          id: appList
 
-              readonly property bool selected: root.selectedIndex === index
+          width: parent.width
+          height: parent.height - (bannerManager.hasBanner ? 64 + parent.spacing : 0)
+          clip: true
+          visible: root.activeProvider.results.length > 0
+          model: root.activeProvider.results
+          cellWidth: width / Math.max(1, Math.floor(width / 140))
+          cellHeight: 110
+          boundsBehavior: Flickable.StopAtBounds
+          currentIndex: Math.max(0, root.selectedIndex)
 
-              width: appList.cellWidth
-              height: appList.cellHeight
+          Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
 
-              Item {
-                anchors.fill: parent
-                opacity: root.open ? 1 : 0
-                y: root.open ? 0 : 20
-
-                Behavior on opacity {
-                  SequentialAnimation {
-                    PauseAnimation { duration: root.open ? Math.min(index * 15, 300) : 0 }
-                    NumberAnimation { duration: 150 }
-                  }
-                }
-
-                Behavior on y {
-                  SequentialAnimation {
-                    PauseAnimation { duration: root.open ? Math.min(index * 15, 300) : 0 }
-                    NumberAnimation {
-                      duration: 350
-                      easing.type: Easing.OutExpo
-                    }
-                  }
-                }
-
-                Rectangle {
-                  anchors.centerIn: parent
-                  width: parent.width - 12
-                  height: parent.height - 12
-                  radius: theme.radiusLarge
-                  color: appRow.selected
-                    ? theme.accentContainer
-                    : appArea.containsMouse ? theme.surfaceHover : "transparent"
-
-                  Column {
-                    anchors.centerIn: parent
-                    spacing: 12
-
-                    Image {
-                      anchors.horizontalCenter: parent.horizontalCenter
-                      width: 52
-                      height: 52
-                      source: root.iconSource(appRow.modelData)
-                      sourceSize.width: width
-                      sourceSize.height: height
-                      fillMode: Image.PreserveAspectFit
-                      visible: source.toString().length > 0
-                    }
-
-                    Text {
-                      anchors.horizontalCenter: parent.horizontalCenter
-                      text: "󰣆"
-                      color: appRow.selected ? theme.accentContainerForeground : theme.muted
-                      font.pixelSize: 32
-                      visible: root.iconSource(appRow.modelData).length === 0
-                    }
-
-                    Text {
-                      anchors.horizontalCenter: parent.horizontalCenter
-                      width: parent.parent.width - 16
-                      text: appRow.modelData.name
-                      color: appRow.selected ? theme.accentContainerForeground : theme.foreground
-                      elide: Text.ElideRight
-                      horizontalAlignment: Text.AlignHCenter
-                      maximumLineCount: 1
-                      font.pixelSize: 12
-                      font.weight: appRow.selected ? Font.DemiBold : Font.Medium
-                    }
-                  }
-
-                  MouseArea {
-                    id: appArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onEntered: root.selectedIndex = index
-                    onClicked: root.launch(appRow.modelData)
-                  }
-                }
-              }
-            }
+          delegate: AppLauncherDelegate {
+            width: appList.cellWidth
+            height: appList.cellHeight
+            selectedIndex: root.selectedIndex
+            popupOpen: root.open
+            onHoverEntered: (hoverIndex) => { root.selectedIndex = hoverIndex; }
+            onLaunchClicked: (appEntry) => { root.launch(appEntry); }
           }
         }
       }

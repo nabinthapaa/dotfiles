@@ -9,10 +9,15 @@ import "modules/osd"
 import "modules/power"
 import "modules/screenshot"
 import "modules/system"
+import "modules/overview"
+import "shared"
 
 ShellRoot {
+  BrightnessTracker { id: brightnessTracker }
+
   Osd {
     id: osd
+    brightnessTracker: brightnessTracker
   }
 
   NotificationCenter {
@@ -25,7 +30,7 @@ ShellRoot {
 
   PowerMenu {}
 
-  PackageSearcher {}
+
 
   ScreenshotMenu {}
 
@@ -35,5 +40,6 @@ ShellRoot {
     notificationServer: notifications.server
     property var notificationCenter: notifications
     osd: osd
+    brightnessTracker: brightnessTracker
   }
 }

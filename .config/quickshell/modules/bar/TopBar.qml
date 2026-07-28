@@ -4,6 +4,8 @@ import Quickshell.Services.Mpris
 import QtQuick
 import "../../shared"
 import "../calendar"
+import "../packages"
+import "../overview" as OverviewModule
 import "components"
 
 Scope {
@@ -11,6 +13,7 @@ Scope {
 
   required property var notificationServer
   required property var osd
+  required property var brightnessTracker
 
   property var activePlayer: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
   property string lastTrackTitle: activePlayer ? activePlayer.trackTitle : ""
@@ -48,7 +51,25 @@ Scope {
       property alias isWifiOpen: connectivityBtns.wifiPopupOpen
       property alias isBtOpen: connectivityBtns.bluetoothPopupOpen
       property alias isCalendarOpen: calendarMenu.open
-      property bool isAnyPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen || isCalendarOpen
+      property alias isAppLauncherOpen: appLauncher.open
+      property alias isClipboardOpen: clipboardLauncher.open
+      property alias isWallpaperOpen: wallpaperLauncher.open
+      property alias isPackageSearcherOpen: packageSearcher.open
+      property alias isOverviewOpen: overviewController.open
+      property bool isRightPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen
+      property bool isAnyPanelOpen: isRightPanelOpen || isCalendarOpen || isAppLauncherOpen || isClipboardOpen || isWallpaperOpen || isPackageSearcherOpen || isOverviewOpen
+
+      function closeAllPanelsExcept(panel) {
+        if (panel !== "appLauncher") bar.isAppLauncherOpen = false;
+        if (panel !== "clipboardLauncher") bar.isClipboardOpen = false;
+        if (panel !== "wallpaperLauncher") bar.isWallpaperOpen = false;
+        if (panel !== "packageSearcher") bar.isPackageSearcherOpen = false;
+        if (panel !== "controlPanel") bar.isControlPanelOpen = false;
+        if (panel !== "calendarMenu") bar.isCalendarOpen = false;
+        if (panel !== "wifi") bar.isWifiOpen = false;
+        if (panel !== "bt") bar.isBtOpen = false;
+        if (panel !== "overview") bar.isOverviewOpen = false;
+      }
 
       implicitHeight: screen.height
       exclusiveZone: theme.barHeight
@@ -65,12 +86,13 @@ Scope {
       HyprlandFocusGrab {
         active: bar.isAnyPanelOpen
         windows: [ bar ]
-        onCleared: {
-          bar.isControlPanelOpen = false;
-          bar.isWifiOpen = false;
-          bar.isBtOpen = false;
-          bar.isCalendarOpen = false;
-        }
+        onCleared: bar.closeAllPanelsExcept("")
+      }
+
+      OverviewModule.OverviewController {
+        id: overviewController
+        activeMonitor: bar.screen
+        onOpenChanged: if (open) bar.closeAllPanelsExcept("overview")
       }
 
       anchors {
@@ -79,15 +101,9 @@ Scope {
         right: true
       }
 
-      AppLauncher {
-        id: appLauncher
-        parentWindow: bar
-      }
 
-      WallpaperLauncher {
-        id: wallpaperLauncher
-        parentWindow: bar
-      }
+
+
 
 
       Item {
@@ -99,16 +115,55 @@ Scope {
           anchors.leftMargin: 8
           anchors.top: parent.top
           anchors.topMargin: (theme.barHeight - theme.islandHeight) / 2
-          implicitWidth: leftRow.implicitWidth + theme.islandPaddingH * 2
+          
+          implicitWidth: bar.isOverviewOpen ? (bar.width - 32) : leftRow.implicitWidth + theme.islandPaddingH * 2
+          implicitHeight: bar.isOverviewOpen ? Math.round(bar.height * 0.85) : theme.islandHeight
+          customRadius: bar.isOverviewOpen ? theme.radiusLarge : theme.radiusPill
+          z: bar.isOverviewOpen ? 10 : 1
 
-          Row {
-            id: leftRow
-            anchors.centerIn: parent
-            spacing: theme.gap
+          Behavior on implicitWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+          Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+          Behavior on customRadius { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
 
-            WorkspaceList {
-              screen: bar.screen
-              anchors.verticalCenter: parent.verticalCenter
+          Item {
+            anchors.fill: parent
+
+            Row {
+              id: leftRow
+              anchors.centerIn: parent
+              spacing: theme.gap
+              opacity: bar.isOverviewOpen ? 0 : 1
+              scale: bar.isOverviewOpen ? 0.9 : 1
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+
+              WorkspaceList {
+                screen: bar.screen
+                anchors.verticalCenter: parent.verticalCenter
+              }
+            }
+
+            OverviewModule.WorkspaceGrid {
+              id: workspaceGrid
+              anchors.fill: parent
+              workspaces: overviewController.workspaces
+              allClients: overviewController.clients
+              activeMonitor: bar.screen
+              
+              opacity: bar.isOverviewOpen ? 1 : 0
+              scale: bar.isOverviewOpen ? 1 : 0.95
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+              
+              onVisibleChanged: {
+                if (visible) {
+                  workspaceGrid.forceActiveFocus()
+                }
+              }
+              
+              onCloseRequested: bar.closeAllPanelsExcept("")
             }
           }
         }
@@ -118,9 +173,20 @@ Scope {
           anchors.horizontalCenter: parent.horizontalCenter
           anchors.top: parent.top
           anchors.topMargin: (theme.barHeight - theme.islandHeight) / 2
-          implicitWidth: root.osd.active ? 240 : (root.mediaPopupActive ? 280 : centerRow.implicitWidth + theme.islandPaddingH * 2)
+          
+          implicitWidth: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? Math.round(bar.width * 0.8) :
+                         root.osd.active ? 240 : (root.mediaPopupActive ? 280 : centerRow.implicitWidth + theme.islandPaddingH * 2)
+          implicitHeight: bar.isAppLauncherOpen ? 680 :
+                          bar.isClipboardOpen ? 660 :
+                          bar.isWallpaperOpen ? Math.round(bar.height * 0.8) :
+                          bar.isPackageSearcherOpen ? Math.round(bar.height * 0.8) :
+                          theme.islandHeight
+          customRadius: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? theme.radiusLarge : theme.radiusPill
+          z: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 10 : 1
 
           Behavior on implicitWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+          Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+          Behavior on customRadius { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
 
           Item {
             anchors.fill: parent
@@ -128,8 +194,8 @@ Scope {
             Row {
               id: centerRow
               anchors.centerIn: parent
-              opacity: root.osd.active || root.mediaPopupActive ? 0 : 1
-              scale: root.osd.active || root.mediaPopupActive ? 0.9 : 1
+              opacity: (root.osd.active || root.mediaPopupActive || bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 0 : 1
+              scale: (root.osd.active || root.mediaPopupActive || bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 0.9 : 1
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
@@ -281,6 +347,54 @@ Scope {
                 elide: Text.ElideRight
               }
             }
+
+            AppLauncher {
+              id: appLauncher
+              onOpenChanged: if (open) bar.closeAllPanelsExcept("appLauncher")
+              parentWindow: bar
+              anchors.fill: parent
+              scale: open ? 1 : 0.95
+              opacity: open ? 1 : 0
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+            }
+
+            ClipboardLauncher {
+              id: clipboardLauncher
+              onOpenChanged: if (open) bar.closeAllPanelsExcept("clipboardLauncher")
+              parentWindow: bar
+              anchors.fill: parent
+              scale: open ? 1 : 0.95
+              opacity: open ? 1 : 0
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+            }
+
+            WallpaperLauncher {
+              id: wallpaperLauncher
+              onOpenChanged: if (open) bar.closeAllPanelsExcept("wallpaperLauncher")
+              parentWindow: bar
+              anchors.fill: parent
+              scale: open ? 1 : 0.95
+              opacity: open ? 1 : 0
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+            }
+
+            PackageSearcher {
+              id: packageSearcher
+              onOpenChanged: if (open) bar.closeAllPanelsExcept("packageSearcher")
+              parentWindow: bar
+              anchors.fill: parent
+              scale: open ? 1 : 0.95
+              opacity: open ? 1 : 0
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+            }
           }
         }
 
@@ -301,7 +415,8 @@ Scope {
                           bar.isBtOpen ? 340 :
                           theme.islandHeight
 
-          customRadius: bar.isAnyPanelOpen ? theme.radiusLarge : theme.radiusPill
+          customRadius: bar.isRightPanelOpen ? theme.radiusLarge : theme.radiusPill
+          z: bar.isRightPanelOpen ? 10 : 1
           Behavior on customRadius { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
           Behavior on implicitWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
           Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
@@ -315,28 +430,36 @@ Scope {
               anchors.top: parent.top
               anchors.topMargin: (theme.islandHeight - implicitHeight) / 2
               spacing: theme.gap
-              opacity: bar.isAnyPanelOpen ? 0 : 1
-              scale: bar.isAnyPanelOpen ? 0.9 : 1
+              opacity: bar.isRightPanelOpen ? 0 : 1
+              scale: bar.isRightPanelOpen ? 0.9 : 1
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
 
-              ConnectivityButtons { id: connectivityBtns; parentWindow: bar; island: rightIsland; anchors.verticalCenter: parent.verticalCenter }
+              ConnectivityButtons {
+                id: connectivityBtns
+                parentWindow: bar
+                island: rightIsland
+                anchors.verticalCenter: parent.verticalCenter
+                onWifiPopupOpenChanged: if (wifiPopupOpen) bar.closeAllPanelsExcept("wifi")
+                onBluetoothPopupOpenChanged: if (bluetoothPopupOpen) bar.closeAllPanelsExcept("bt")
+              }
               BatteryIndicator { anchors.verticalCenter: parent.verticalCenter }
               Tray { parentWindow: bar; anchors.verticalCenter: parent.verticalCenter }
-              ClipboardLauncher { id: clipboardLauncher; parentWindow: bar; anchors.verticalCenter: parent.verticalCenter }
               BarIconButton { icon: "󰅇"; active: clipboardLauncher.open; anchors.verticalCenter: parent.verticalCenter; onClicked: clipboardLauncher.open = !clipboardLauncher.open }
               SidebarButton { anchors.verticalCenter: parent.verticalCenter; active: controlPanel.open; onClicked: controlPanel.open = !controlPanel.open }
             }
 
             ControlPanel {
               id: controlPanel
+              onOpenChanged: if (open) bar.closeAllPanelsExcept("controlPanel")
               anchors.horizontalCenter: parent.horizontalCenter
               anchors.top: parent.top
               panelScreen: bar.screen
               notificationServer: root.notificationServer
               notificationCenter: root.notificationCenter
               osd: root.osd
+              brightnessTracker: root.brightnessTracker
               
               scale: controlPanel.open ? 1 : 0.95
               opacity: controlPanel.open ? 1 : 0
@@ -381,6 +504,7 @@ Scope {
       
       CalendarMenu {
         id: calendarMenu
+        onOpenChanged: if (open) bar.closeAllPanelsExcept("calendarMenu")
         parentWindow: bar
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top

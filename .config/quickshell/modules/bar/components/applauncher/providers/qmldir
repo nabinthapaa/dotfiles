@@ -1,0 +1,7 @@
+SearchProvider 1.0 SearchProvider.qml
+AppProvider 1.0 AppProvider.qml
+FileProvider 1.0 FileProvider.qml
+BannerProvider 1.0 BannerProvider.qml
+QalcProvider 1.0 QalcProvider.qml
+DictProvider 1.0 DictProvider.qml
+BannerManager 1.0 BannerManager.qml

@@ -16,6 +16,7 @@ if not action then
 	print("  qs-wallpaper    Toggle Quickshell Wallpaper Selector")
 	print("  qs-packages     Toggle Quickshell Packages")
 	print("  qs-control-center Toggle Quickshell Control Center")
+	print("  qs-overview     Toggle Quickshell Workspace Overview")
 	print("  qs-restart      Restart Quickshell")
 	print("  clipboard-store Store clipboard via cliphist (with privacy checks)")
 	print("  gamepad         Run Gamepad OSK")
@@ -61,6 +62,10 @@ end
 
 if action == "qs-control-center" then
 	return require("lua-config.quickshell").toggle_control_center()
+end
+
+if action == "qs-overview" then
+	return require("lua-config.quickshell").toggle("overview", "Overview", "/tmp/quickshell-overview-ipc.log")
 end
 
 if action == "qs-restart" then

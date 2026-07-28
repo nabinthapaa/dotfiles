@@ -14,3 +14,4 @@ hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("~/dotfiles/.config/hypr/scrip
 hl.bind(mainMod .. " + CTRL + SHIFT + W", hl.dsp.exec_cmd("sh -c 'quickshell -n -p ~/dotfiles/.config/quickshell/ &'"))
 
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("~/dotfiles/.config/hypr/scripts/runner.lua qs-control-center"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("~/dotfiles/.config/hypr/scripts/runner.lua qs-overview"))

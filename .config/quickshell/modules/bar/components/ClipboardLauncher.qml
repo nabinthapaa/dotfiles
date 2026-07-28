@@ -325,331 +325,250 @@ Item {
     }
   }
 
-  PopupWindow {
-    id: clipboardPopup
+  Column {
+    anchors.fill: parent
+    anchors.margins: 14
+    spacing: 12
+    opacity: root.open ? 1 : 0
+    visible: opacity > 0
+    Behavior on opacity { NumberAnimation { duration: 150 } }
 
-    anchor.window: root.parentWindow
-    anchor.rect.x: (root.parentWindow.width - width) / 2
-    anchor.rect.y: Math.max(theme.barHeight + 8, (root.parentWindow.screen.height - height) / 2)
-    implicitWidth: root.popupWidth
-    implicitHeight: root.popupHeight
-    visible: root.open
-    grabFocus: true
-    color: "transparent"
+    SearchBox {
+      id: searchInput
+      width: parent.width
+      icon: "󰅇"
+      text: root.query
+      onSearchTextChanged: (newText) => {
+        root.query = newText;
+        root.resetSelection();
+      }
+      onAccepted: root.copyClip(root.selectedClip())
+      onEscapePressed: root.open = false
+      onMoveSelection: (direction) => { root.cycleSelection(direction); }
+    }
 
-    onVisibleChanged: {
-      if (!visible) {
-        root.open = false;
+    Text {
+      width: parent.width
+      text: root.query.length === 0 ? (root.privateMode ? "Clipboard private" : "Clipboard") : root.filteredClips.length + " results"
+      color: theme.muted
+      font.pixelSize: 11
+      font.weight: Font.Medium
+    }
+
+    Row {
+      width: parent.width
+      height: 30
+      spacing: 8
+
+      Rectangle {
+        width: 98
+        height: parent.height
+        radius: theme.radiusLarge
+        color: root.privateMode ? theme.accentContainer : privateArea.containsMouse ? theme.surfaceHover : theme.surface
+        border.width: 1
+        border.color: root.privateMode ? theme.accent : theme.border
+
+        Text {
+          anchors.centerIn: parent
+          text: "Private"
+          color: root.privateMode ? theme.accentContainerForeground : theme.foreground
+          font.pixelSize: 11
+          font.weight: Font.DemiBold
+        }
+
+        MouseArea {
+          id: privateArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: root.setPrivateMode(!root.privateMode)
+        }
+      }
+
+      Rectangle {
+        width: 82
+        height: parent.height
+        radius: theme.radiusLarge
+        color: clearArea.containsMouse ? theme.surfaceHover : theme.surface
+        border.width: 1
+        border.color: theme.border
+
+        Text {
+          anchors.centerIn: parent
+          text: "Clear all"
+          color: theme.foreground
+          font.pixelSize: 11
+          font.weight: Font.DemiBold
+        }
+
+        MouseArea {
+          id: clearArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: root.clearAll()
+        }
       }
     }
 
-    Rectangle {
-      anchors.fill: parent
-      radius: theme.radiusLarge
-      color: theme.panel
-      border.width: 1
-      border.color: theme.border
-      opacity: root.open ? 1 : 0
-      scale: root.open ? 1 : 0.97
-      transformOrigin: Item.Center
+    Item {
+      width: parent.width
+      height: parent.height - y
 
-      Behavior on scale {
-        NumberAnimation {
-          duration: 150
-          easing.type: Easing.OutCubic
-        }
+      Text {
+        anchors.centerIn: parent
+        width: parent.width - 32
+        text: root.clips.length === 0 ? "Clipboard is empty" : "No clips found"
+        color: theme.muted
+        horizontalAlignment: Text.AlignHCenter
+        font.pixelSize: 13
+        visible: root.filteredClips.length === 0
       }
 
-      Behavior on opacity {
-        NumberAnimation {
-          duration: 120
-          easing.type: Easing.OutCubic
-        }
-      }
+      ListView {
+        id: clipList
 
-      Column {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 12
+        clip: true
+        visible: root.filteredClips.length > 0
+        model: root.filteredClips
+        spacing: 6
+        boundsBehavior: Flickable.StopAtBounds
+        currentIndex: root.selectedIndex
 
-        Rectangle {
-          width: parent.width
-          height: 42
+        delegate: Rectangle {
+          id: clipRow
+
+          required property string modelData
+          required property int index
+
+          readonly property bool selected: root.selectedIndex === index
+          readonly property string preview: root.previewText(modelData)
+          readonly property bool imageClip: root.isImageClip(modelData)
+          readonly property bool pinned: root.isPinned(modelData)
+
+          width: clipList.width
+          height: imageClip ? 136 : 56
           radius: theme.radiusLarge
-          color: theme.surface
-          border.width: 1
-          border.color: searchInput.activeFocus ? theme.accent : theme.border
+          color: selected
+            ? theme.accentContainer
+            : clipArea.containsMouse ? theme.surfaceHover : theme.surface
 
-          Row {
-            anchors.fill: parent
+          Rectangle {
+            id: kindBadge
+
+            anchors.left: parent.left
             anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            spacing: 10
-
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              text: "󰅇"
-              color: theme.muted
-              font.pixelSize: 15
-            }
-
-            TextInput {
-              id: searchInput
-
-              anchors.verticalCenter: parent.verticalCenter
-              width: parent.width - 25
-              height: parent.height
-              text: root.query
-              color: theme.foreground
-              selectionColor: theme.accentContainer
-              selectedTextColor: theme.accentContainerForeground
-              verticalAlignment: TextInput.AlignVCenter
-              clip: true
-              font.pixelSize: 14
-              onTextChanged: {
-                root.query = text;
-                root.resetSelection();
-              }
-              onAccepted: root.copyClip(root.selectedClip())
-
-              Keys.onEscapePressed: root.open = false
-              Keys.onPressed: event => {
-                if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_N) {
-                  root.cycleSelection(1);
-                  event.accepted = true;
-                } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_P) {
-                  root.cycleSelection(-1);
-                  event.accepted = true;
-                }
-              }
-            }
-          }
-        }
-
-        Text {
-          width: parent.width
-          text: root.query.length === 0 ? (root.privateMode ? "Clipboard private" : "Clipboard") : root.filteredClips.length + " results"
-          color: theme.muted
-          font.pixelSize: 11
-          font.weight: Font.Medium
-        }
-
-        Row {
-          width: parent.width
-          height: 30
-          spacing: 8
-
-          Rectangle {
-            width: 98
-            height: parent.height
-            radius: theme.radiusLarge
-            color: root.privateMode ? theme.accentContainer : privateArea.containsMouse ? theme.surfaceHover : theme.surface
-            border.width: 1
-            border.color: root.privateMode ? theme.accent : theme.border
+            anchors.verticalCenter: parent.verticalCenter
+            width: 44
+            height: 28
+            radius: theme.radiusSmall
+            color: clipRow.selected ? theme.accent : theme.surfaceHigh
+            visible: !clipRow.imageClip
 
             Text {
               anchors.centerIn: parent
-              text: "Private"
-              color: root.privateMode ? theme.accentContainerForeground : theme.foreground
-              font.pixelSize: 11
+              text: root.clipKind(clipRow.modelData)
+              color: clipRow.selected ? theme.accentForeground : theme.muted
+              font.pixelSize: 10
               font.weight: Font.DemiBold
-            }
-
-            MouseArea {
-              id: privateArea
-              anchors.fill: parent
-              hoverEnabled: true
-              cursorShape: Qt.PointingHandCursor
-              onClicked: root.setPrivateMode(!root.privateMode)
             }
           }
 
           Rectangle {
-            width: 82
-            height: parent.height
-            radius: theme.radiusLarge
-            color: clearArea.containsMouse ? theme.surfaceHover : theme.surface
+            id: imageFrame
+
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            width: 180
+            height: 120
+            radius: theme.radiusSmall
+            color: theme.surfaceHigh
             border.width: 1
-            border.color: theme.border
+            border.color: clipRow.selected ? theme.accent : theme.border
+            clip: true
+            visible: clipRow.imageClip
 
-            Text {
-              anchors.centerIn: parent
-              text: "Clear all"
-              color: theme.foreground
-              font.pixelSize: 11
-              font.weight: Font.DemiBold
-            }
-
-            MouseArea {
-              id: clearArea
+            Image {
               anchors.fill: parent
-              hoverEnabled: true
-              cursorShape: Qt.PointingHandCursor
-              onClicked: root.clearAll()
+              anchors.margins: 1
+              source: root.previewPath(clipRow.modelData).length > 0 ? root.fileUrl(root.previewPath(clipRow.modelData)) : ""
+              sourceSize.height: 120
+              fillMode: Image.PreserveAspectFit
+              horizontalAlignment: Image.AlignLeft
+              verticalAlignment: Image.AlignVCenter
+              cache: false
             }
           }
-        }
-
-        Item {
-          width: parent.width
-          height: parent.height - y
 
           Text {
-            anchors.centerIn: parent
-            width: parent.width - 32
-            text: root.clips.length === 0 ? "Clipboard is empty" : "No clips found"
-            color: theme.muted
-            horizontalAlignment: Text.AlignHCenter
+            anchors.left: clipRow.imageClip ? imageFrame.right : kindBadge.right
+            anchors.leftMargin: 12
+            anchors.right: actionGroup.left
+            anchors.rightMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            text: (clipRow.pinned ? "Pinned  " : "") + (clipRow.preview.length > 0 ? clipRow.preview : "Empty clip")
+            color: clipRow.selected ? theme.accentContainerForeground : theme.foreground
+            elide: Text.ElideRight
+            maximumLineCount: 1
             font.pixelSize: 13
-            visible: root.filteredClips.length === 0
+            font.weight: clipRow.selected ? Font.DemiBold : Font.Medium
           }
 
-          ListView {
-            id: clipList
-
+          MouseArea {
+            id: clipArea
             anchors.fill: parent
-            clip: true
-            visible: root.filteredClips.length > 0
-            model: root.filteredClips
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: root.selectedIndex = index
+            onClicked: root.copyClip(clipRow.modelData)
+          }
+
+          Row {
+            id: actionGroup
+
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
             spacing: 6
-            boundsBehavior: Flickable.StopAtBounds
-            currentIndex: root.selectedIndex
 
-            delegate: Rectangle {
-              id: clipRow
-
-              required property string modelData
-              required property int index
-
-              readonly property bool selected: root.selectedIndex === index
-              readonly property string preview: root.previewText(modelData)
-              readonly property bool imageClip: root.isImageClip(modelData)
-              readonly property bool pinned: root.isPinned(modelData)
-
-              width: clipList.width
-              height: imageClip ? 136 : 56
-              radius: theme.radiusLarge
-              color: selected
-                ? theme.accentContainer
-                : clipArea.containsMouse ? theme.surfaceHover : theme.surface
+            Repeater {
+              model: [
+                { label: clipRow.pinned ? "󰐃" : "󰐂", action: "pin" },
+                { label: "󰐕", action: "paste" },
+                { label: "󰆴", action: "delete" }
+              ]
 
               Rectangle {
-                id: kindBadge
+                required property var modelData
 
-                anchors.left: parent.left
-                anchors.leftMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                width: 44
+                width: 28
                 height: 28
-                radius: theme.radiusSmall
-                color: clipRow.selected ? theme.accent : theme.surfaceHigh
-                visible: !clipRow.imageClip
+                radius: theme.radiusLarge
+                color: actionArea.containsMouse ? theme.surfaceHover : clipRow.selected ? theme.accentContainer : theme.surfaceHigh
+                border.width: 1
+                border.color: clipRow.selected ? theme.accent : theme.border
 
                 Text {
                   anchors.centerIn: parent
-                  text: root.clipKind(clipRow.modelData)
-                  color: clipRow.selected ? theme.accentForeground : theme.muted
-                  font.pixelSize: 10
-                  font.weight: Font.DemiBold
+                  text: parent.modelData.label
+                  color: clipRow.selected ? theme.accentContainerForeground : theme.foreground
+                  font.pixelSize: 13
                 }
-              }
 
-              Rectangle {
-                id: imageFrame
-
-                anchors.left: parent.left
-                anchors.leftMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                width: 180
-                height: 120
-                radius: theme.radiusSmall
-                color: theme.surfaceHigh
-                border.width: 1
-                border.color: clipRow.selected ? theme.accent : theme.border
-                clip: true
-                visible: clipRow.imageClip
-
-                Image {
+                MouseArea {
+                  id: actionArea
                   anchors.fill: parent
-                  anchors.margins: 1
-                  source: root.previewPath(clipRow.modelData).length > 0 ? root.fileUrl(root.previewPath(clipRow.modelData)) : ""
-                  sourceSize.height: 120
-                  fillMode: Image.PreserveAspectFit
-                  horizontalAlignment: Image.AlignLeft
-                  verticalAlignment: Image.AlignVCenter
-                  cache: false
-                }
-              }
-
-              Text {
-                anchors.left: clipRow.imageClip ? imageFrame.right : kindBadge.right
-                anchors.leftMargin: 12
-                anchors.right: actionGroup.left
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                text: (clipRow.pinned ? "Pinned  " : "") + (clipRow.preview.length > 0 ? clipRow.preview : "Empty clip")
-                color: clipRow.selected ? theme.accentContainerForeground : theme.foreground
-                elide: Text.ElideRight
-                maximumLineCount: 1
-                font.pixelSize: 13
-                font.weight: clipRow.selected ? Font.DemiBold : Font.Medium
-              }
-
-              MouseArea {
-                id: clipArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onEntered: root.selectedIndex = index
-                onClicked: root.copyClip(clipRow.modelData)
-              }
-
-              Row {
-                id: actionGroup
-
-                anchors.right: parent.right
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-
-                Repeater {
-                  model: [
-                    { label: clipRow.pinned ? "󰐃" : "󰐂", action: "pin" },
-                    { label: "󰐕", action: "paste" },
-                    { label: "󰆴", action: "delete" }
-                  ]
-
-                  Rectangle {
-                    required property var modelData
-
-                    width: 28
-                    height: 28
-                    radius: theme.radiusLarge
-                    color: actionArea.containsMouse ? theme.surfaceHover : clipRow.selected ? theme.accentContainer : theme.surfaceHigh
-                    border.width: 1
-                    border.color: clipRow.selected ? theme.accent : theme.border
-
-                    Text {
-                      anchors.centerIn: parent
-                      text: parent.modelData.label
-                      color: clipRow.selected ? theme.accentContainerForeground : theme.foreground
-                      font.pixelSize: 13
-                    }
-
-                    MouseArea {
-                      id: actionArea
-                      anchors.fill: parent
-                      hoverEnabled: true
-                      cursorShape: Qt.PointingHandCursor
-                      onClicked: {
-                        if (parent.modelData.action === "pin") {
-                          root.togglePinned(clipRow.modelData);
-                        } else if (parent.modelData.action === "paste") {
-                          root.quickPasteClip(clipRow.modelData);
-                        } else if (parent.modelData.action === "delete") {
-                          root.deleteClip(clipRow.modelData);
-                        }
-                      }
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: {
+                    if (parent.modelData.action === "pin") {
+                      root.togglePinned(clipRow.modelData);
+                    } else if (parent.modelData.action === "paste") {
+                      root.quickPasteClip(clipRow.modelData);
+                    } else if (parent.modelData.action === "delete") {
+                      root.deleteClip(clipRow.modelData);
                     }
                   }
                 }
