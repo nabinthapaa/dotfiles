@@ -11,6 +11,7 @@ import "modules/screenshot"
 import "modules/system"
 import "modules/overview"
 import "shared"
+import Quickshell.Services.Polkit
 
 ShellRoot {
   BrightnessTracker { id: brightnessTracker }
@@ -36,10 +37,15 @@ ShellRoot {
 
   SystemMonitor {}
 
+  PolkitAgent {
+    id: polkitAgent
+  }
+
   TopBar {
     notificationServer: notifications.server
     property var notificationCenter: notifications
     osd: osd
     brightnessTracker: brightnessTracker
+    polkitAgent: polkitAgent
   }
 }

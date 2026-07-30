@@ -14,6 +14,7 @@ Scope {
   required property var notificationServer
   required property var osd
   required property var brightnessTracker
+  required property var polkitAgent
 
   property var activePlayer: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
   property string lastTrackTitle: activePlayer ? activePlayer.trackTitle : ""
@@ -57,7 +58,7 @@ Scope {
       property alias isPackageSearcherOpen: packageSearcher.open
       property alias isOverviewOpen: overviewController.open
       property bool isRightPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen
-      property bool isAnyPanelOpen: isRightPanelOpen || isCalendarOpen || isAppLauncherOpen || isClipboardOpen || isWallpaperOpen || isPackageSearcherOpen || isOverviewOpen
+      property bool isAnyPanelOpen: isRightPanelOpen || isCalendarOpen || isAppLauncherOpen || isClipboardOpen || isWallpaperOpen || isPackageSearcherOpen || isOverviewOpen || polkitAgent.isActive
 
       function closeAllPanelsExcept(panel) {
         if (panel !== "appLauncher") bar.isAppLauncherOpen = false;
@@ -175,14 +176,16 @@ Scope {
           anchors.topMargin: (theme.barHeight - theme.islandHeight) / 2
           
           implicitWidth: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? Math.round(bar.width * 0.8) :
+                         polkitAgent.isActive ? 400 :
                          root.osd.active ? 240 : (root.mediaPopupActive ? 280 : centerRow.implicitWidth + theme.islandPaddingH * 2)
           implicitHeight: bar.isAppLauncherOpen ? 680 :
                           bar.isClipboardOpen ? 660 :
                           bar.isWallpaperOpen ? Math.round(bar.height * 0.8) :
                           bar.isPackageSearcherOpen ? Math.round(bar.height * 0.8) :
+                          polkitAgent.isActive ? 220 :
                           theme.islandHeight
-          customRadius: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? theme.radiusLarge : theme.radiusPill
-          z: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 10 : 1
+          customRadius: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen || polkitAgent.isActive) ? theme.radiusLarge : theme.radiusPill
+          z: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen || polkitAgent.isActive) ? 10 : 1
 
           Behavior on implicitWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
           Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
@@ -194,8 +197,8 @@ Scope {
             Row {
               id: centerRow
               anchors.centerIn: parent
-              opacity: (root.osd.active || root.mediaPopupActive || bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 0 : 1
-              scale: (root.osd.active || root.mediaPopupActive || bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 0.9 : 1
+              opacity: (polkitAgent.isActive || root.osd.active || root.mediaPopupActive || bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 0 : 1
+              scale: (polkitAgent.isActive || root.osd.active || root.mediaPopupActive || bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen) ? 0.9 : 1
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
@@ -206,8 +209,8 @@ Scope {
             Item {
               id: osdContainer
               anchors.fill: parent
-              opacity: root.osd.active ? 1 : 0
-              scale: root.osd.active ? 1 : 0.9
+              opacity: root.osd.active && !polkitAgent.isActive ? 1 : 0
+              scale: root.osd.active && !polkitAgent.isActive ? 1 : 0.9
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
@@ -307,8 +310,8 @@ Scope {
               id: mediaRow
               anchors.centerIn: parent
               spacing: 12
-              opacity: root.mediaPopupActive && !root.osd.active ? 1 : 0
-              scale: root.mediaPopupActive && !root.osd.active ? 1 : 0.9
+              opacity: root.mediaPopupActive && !root.osd.active && !polkitAgent.isActive ? 1 : 0
+              scale: root.mediaPopupActive && !root.osd.active && !polkitAgent.isActive ? 1 : 0.9
               visible: opacity > 0
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
@@ -346,6 +349,16 @@ Scope {
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
               }
+            }
+
+            PolkitPrompt {
+              anchors.fill: parent
+              flow: polkitAgent.flow
+              opacity: polkitAgent.isActive ? 1 : 0
+              scale: polkitAgent.isActive ? 1 : 0.9
+              visible: opacity > 0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+              Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
             }
 
             AppLauncher {

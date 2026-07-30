@@ -15,7 +15,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("zen-browser-bin", { workspace = "2 silent" })
 	hl.exec_cmd("kanata -c /home/nabin/.config/kanata/config.kbd")
 	hl.exec_cmd("wl-paste --watch ~/.config/hypr/scripts/runner.lua clipboard-store")
-	hl.exec_cmd("~/.config/hypr/scripts/runner.lua qs-restart")
+	hl.exec_cmd("quickshell -n -p ~/.config/quickshell/shell.qml")
 end)
 
 hl.on("monitor.added", function()

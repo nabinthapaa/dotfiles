@@ -183,6 +183,10 @@ if command -v starship >/dev/null 2>&1; then
   eval -- "$(starship init zsh)"
 fi
 
+if command -v herdr >/dev/null 2>&1; then
+  eval -- "$(herdr completion zsh)"
+fi
+
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
 fi
@@ -311,3 +315,4 @@ unset VIMRUNTIME
 # Added by Antigravity CLI installer
 export PATH="/home/nabin/.local/bin:$PATH"
 export PATH="/home/nabin/.devcontainers/bin:$PATH"
+
