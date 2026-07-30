@@ -60,6 +60,13 @@ Scope {
       property bool isRightPanelOpen: isControlPanelOpen || isWifiOpen || isBtOpen
       property bool isAnyPanelOpen: isRightPanelOpen || isCalendarOpen || isAppLauncherOpen || isClipboardOpen || isWallpaperOpen || isPackageSearcherOpen || isOverviewOpen || polkitAgent.isActive
 
+      property bool _forceDropGrab: false
+
+      function regrabFocus() {
+        _forceDropGrab = true;
+        Qt.callLater(function() { _forceDropGrab = false; });
+      }
+
       function closeAllPanelsExcept(panel) {
         if (panel !== "appLauncher") bar.isAppLauncherOpen = false;
         if (panel !== "clipboardLauncher") bar.isClipboardOpen = false;
@@ -85,7 +92,7 @@ Scope {
       }
 
       HyprlandFocusGrab {
-        active: bar.isAnyPanelOpen
+        active: bar.isAnyPanelOpen && !bar._forceDropGrab
         windows: [ bar ]
         onCleared: bar.closeAllPanelsExcept("")
       }
@@ -182,7 +189,7 @@ Scope {
                           bar.isClipboardOpen ? 660 :
                           bar.isWallpaperOpen ? Math.round(bar.height * 0.8) :
                           bar.isPackageSearcherOpen ? Math.round(bar.height * 0.8) :
-                          polkitAgent.isActive ? 220 :
+                          polkitAgent.isActive ? (polkitAgent.flow && polkitAgent.flow.identities.length > 1 ? 230 : 190) :
                           theme.islandHeight
           customRadius: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen || polkitAgent.isActive) ? theme.radiusLarge : theme.radiusPill
           z: (bar.isAppLauncherOpen || bar.isClipboardOpen || bar.isWallpaperOpen || bar.isPackageSearcherOpen || polkitAgent.isActive) ? 10 : 1
@@ -357,6 +364,7 @@ Scope {
               opacity: polkitAgent.isActive ? 1 : 0
               scale: polkitAgent.isActive ? 1 : 0.9
               visible: opacity > 0
+              onRequestWindowFocus: bar.regrabFocus()
               Behavior on opacity { NumberAnimation { duration: 150 } }
               Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
             }
